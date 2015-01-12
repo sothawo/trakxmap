@@ -18,15 +18,21 @@ package com.sothawo.trakxmap;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ToolBar;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-
+import java.util.Locale;
+import java.util.Optional;
 import java.util.prefs.Preferences;
 
 /**
@@ -41,6 +47,7 @@ public class TrakxmapApp extends Application {
     private static final String PREF_MAIN_WINDOW_WIDTH = "mainWindowWidth";
     private static final String PREF_MAIN_WINDOW_HEIGHT = "mainWindowHeight";
     private static final String CONF_WINDOW_TITLE = "windowTitle";
+    private static final String PREF_LANGUAGE = "language";
 
 
     /** application configuration */
@@ -61,6 +68,12 @@ public class TrakxmapApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+//        Optional.ofNullable(prefs.get(PREF_LANGUAGE, null)).ifPresent(lang -> I18N.setLocale(new Locale(lang)));
+        String s = prefs.get(PREF_LANGUAGE, null);
+        if (s != null) {
+            Locale l = Locale.forLanguageTag(s);
+            I18N.setLocale(l);
+        }
         logger.info(I18N.get(I18N.LOG_START_PROGRAM));
 
         primaryStage.setTitle(config.getString(CONF_WINDOW_TITLE));
@@ -69,6 +82,12 @@ public class TrakxmapApp extends Application {
         primaryStage.show();
 
         logger.trace(I18N.get(I18N.LOG_START_PROGRAM_FINISHED));
+    }
+
+    @Override
+    public void stop() throws Exception {
+        prefs.put(PREF_LANGUAGE, I18N.getLocale().toLanguageTag());
+        super.stop();
     }
 
     /**
@@ -99,6 +118,8 @@ public class TrakxmapApp extends Application {
         menuBar.getMenus().add(menuFile);
         sceneVBox.getChildren().add(menuBar);
         */
+
+        sceneVBox.getChildren().add(createToolbar());
         // create content
         Label label = new Label(
                 "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt " +
@@ -115,6 +136,36 @@ public class TrakxmapApp extends Application {
         sceneVBox.getChildren().add(label);
 
         return scene;
+    }
+
+    /**
+     * creates the applications toolbar.
+     *
+     * @return ToolBar
+     */
+    private Node createToolbar() {
+        // Label for the Language change with automatic change
+        Label labelLanguages = I18N.labelForKey(I18N.LABEL_SWITCH_LOCALE);
+        // combobox for switching the locale
+        ComboBox<Locale> comboLanguages = new ComboBox<>();
+        comboLanguages.setEditable(false);
+        comboLanguages.getItems().addAll(I18N.getSupportedLocales());
+        comboLanguages.setConverter(new StringConverter<Locale>() {
+            @Override
+            public String toString(Locale l) {
+                return l.getDisplayLanguage(l);
+            }
+
+            @Override
+            public Locale fromString(String s) {
+                // only really needed if combo box is editable
+                return Locale.forLanguageTag(s);
+            }
+        });
+        comboLanguages.getSelectionModel().select(I18N.getLocale());
+        I18N.localeProperty().bindBidirectional(comboLanguages.valueProperty());
+
+        return new ToolBar(labelLanguages, comboLanguages);
     }
 
 // --------------------------- main() method ---------------------------
