@@ -19,6 +19,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,37 +40,33 @@ import java.util.ResourceBundle;
 public class I18N {
 // ------------------------------ FIELDS ------------------------------
 
-    public final static String LOG_START_PROGRAM = "log.start.program";
-    public final static String LOG_START_PROGRAM_FINISHED = "log.start.program.finished";
-    public final static String LOG_SWITCH_LOCALE = "log.switch.locale";
-    public final static String LABEL_SWITCH_LOCALE = "label.switch.locale";
+    public static final  String LOG_START_PROGRAM = "log.start.program";
+    public static final String LOG_START_PROGRAM_FINISHED = "log.start.program.finished";
+    public static final String LOG_SWITCH_LOCALE = "log.switch.locale";
+    public static final String LABEL_SWITCH_LOCALE = "label.switch.locale";
+    public static final String TOOLTIP_SWITCH_LOCALE = "tooltip.switch.locale";
+    public static final String LOG_SHOWING_STAGE = "log.showing.stage";
+    public static final String LOG_MAP_INITIALIZED = "log.map.initialized";
+    public static final String LABEL_DUMMY_TRACKLIST = "label.dummy.tracklist";
+    public static final String LABEL_DUMMY_MAP = "label.dummy.map";
+    public static final String LABEL_DUMMY_ELEVATION= "label.dummy.elevation";
 
     private static final Logger logger = LoggerFactory.getLogger(I18N.class);
     private static final ObjectProperty<Locale> locale;
+
+// -------------------------- STATIC METHODS --------------------------
 
     static {
         locale = new SimpleObjectProperty<>(getDefaultLocale());
         locale.addListener((observable, oldValue, newValue) -> logger.info(get(LOG_SWITCH_LOCALE, oldValue,
         newValue)));
     }
-
-// -------------------------- STATIC METHODS --------------------------
-
     public static ObjectProperty<Locale> localeProperty() {
         return locale;
     }
 
-    public static Locale getLocale() {
-        return locale.get();
-    }
-
     public static void setLocale(Locale locale) {
         localeProperty().set(locale);
-    }
-
-    public static String get(String key, Object... args) {
-        ResourceBundle bundle = ResourceBundle.getBundle("messages", getLocale());
-        return MessageFormat.format(bundle.getString(key), args);
     }
 
     public static List<Locale> getSupportedLocales() {
@@ -93,5 +90,25 @@ public class I18N {
         Label label = new Label();
         label.textProperty().bind(Bindings.createStringBinding(() -> get(key), locale));
         return label;
+    }
+
+    public static String get(String key, Object... args) {
+        ResourceBundle bundle = ResourceBundle.getBundle("messages", getLocale());
+        return MessageFormat.format(bundle.getString(key), args);
+    }
+
+    public static Locale getLocale() {
+        return locale.get();
+    }
+
+    /**
+     * creates a bound Label for the given resourcebundle key
+     * @param key ResourceBundle key
+     * @return Label
+     */
+    public static Tooltip tooltipForKey(final String key) {
+        Tooltip tooltip = new Tooltip();
+        tooltip.textProperty().bind(Bindings.createStringBinding(() -> get(key), locale));
+        return tooltip;
     }
 }

@@ -15,15 +15,19 @@
 */
 package com.sothawo.trakxmap;
 
+import com.sothawo.mapjfx.Coordinate;
+import com.sothawo.mapjfx.MapView;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import javafx.application.Application;
-import javafx.beans.binding.Bindings;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.ToolBar;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -56,6 +60,9 @@ public class TrakxmapApp extends Application {
     /** user preferences */
     private final Preferences prefs = Preferences.userNodeForPackage(TrakxmapApp.class);
 
+    /** the mapView to be used */
+    private MapView mapView;
+
 // -------------------------- STATIC METHODS --------------------------
 
     static {
@@ -68,17 +75,14 @@ public class TrakxmapApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-//        Optional.ofNullable(prefs.get(PREF_LANGUAGE, null)).ifPresent(lang -> I18N.setLocale(new Locale(lang)));
-        String s = prefs.get(PREF_LANGUAGE, null);
-        if (s != null) {
-            Locale l = Locale.forLanguageTag(s);
-            I18N.setLocale(l);
-        }
+        Optional.ofNullable(prefs.get(PREF_LANGUAGE, null))
+                .ifPresent(lang -> I18N.setLocale(Locale.forLanguageTag(lang)));
         logger.info(I18N.get(I18N.LOG_START_PROGRAM));
 
         primaryStage.setTitle(config.getString(CONF_WINDOW_TITLE));
         primaryStage.setScene(setupPrimaryScene());
 
+        logger.trace(I18N.get(I18N.LOG_SHOWING_STAGE));
         primaryStage.show();
 
         logger.trace(I18N.get(I18N.LOG_START_PROGRAM_FINISHED));
@@ -96,21 +100,7 @@ public class TrakxmapApp extends Application {
      * @return Scene
      */
     private Scene setupPrimaryScene() {
-        // all elements in a vbox (menu, toolbar, content, statusbar)
-
-        VBox sceneVBox = new VBox();
-        // get the windows size from the preferences and add handlers to set size changes in the preferences
-        int windowWidth = prefs.getInt(PREF_MAIN_WINDOW_WIDTH, config.getInt(PREF_MAIN_WINDOW_WIDTH));
-        int windowHeight = prefs.getInt(PREF_MAIN_WINDOW_HEIGHT, config.getInt(PREF_MAIN_WINDOW_HEIGHT));
-        Scene scene = new Scene(sceneVBox, windowWidth, windowHeight);
-        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
-            prefs.putInt(PREF_MAIN_WINDOW_WIDTH, newValue.intValue());
-        });
-        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
-            prefs.putInt(PREF_MAIN_WINDOW_HEIGHT, newValue.intValue());
-        });
-
-        // create menu
+        // create menu, must be added to top of the content if needed
         /*
         MenuBar menuBar = new MenuBar();
         menuBar.setUseSystemMenuBar(true);
@@ -119,23 +109,63 @@ public class TrakxmapApp extends Application {
         sceneVBox.getChildren().add(menuBar);
         */
 
-        sceneVBox.getChildren().add(createToolbar());
+
         // create content
-        Label label = new Label(
-                "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt " +
-                        "ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo " +
-                        "duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum" +
-                        " dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy" +
-                        " eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. " +
-                        "At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, " +
-                        " sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur " +
-                        "sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam " +
-                        "erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita " +
-                        "kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.");
-        label.setWrapText(true);
-        sceneVBox.getChildren().add(label);
+        BorderPane content = new BorderPane();
+        // on top the toolbar (maybe a menu later)
+        content.setTop(createToolbar());
+
+        //in the center a splitpane for the tracks on the left and the map and the elevation diagram on the right
+        SplitPane splitPane1 = new SplitPane();
+        splitPane1.setOrientation(Orientation.HORIZONTAL);
+        SplitPane splitPane2 = new SplitPane();
+        splitPane2.setOrientation(Orientation.VERTICAL);
+
+
+        // initialize the track view
+        splitPane1.getItems().add(I18N.labelForKey(I18N.LABEL_DUMMY_TRACKLIST));
+
+        // initialize the map view
+        setupMapView();
+        splitPane2.getItems().add(mapView);
+
+        Label label = I18N.labelForKey(I18N.LABEL_DUMMY_ELEVATION);
+        label.setMinHeight(100.0);
+        splitPane2.getItems().add(label);
+
+        splitPane1.getItems().add(splitPane2);
+
+        content.setCenter(splitPane1);
+
+        // get the windows size from the preferences and add handlers to set size changes in the preferences
+        int windowWidth = prefs.getInt(PREF_MAIN_WINDOW_WIDTH, config.getInt(PREF_MAIN_WINDOW_WIDTH));
+        int windowHeight = prefs.getInt(PREF_MAIN_WINDOW_HEIGHT, config.getInt(PREF_MAIN_WINDOW_HEIGHT));
+        Scene scene = new Scene(content, windowWidth, windowHeight);
+        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+            prefs.putInt(PREF_MAIN_WINDOW_WIDTH, newValue.intValue());
+        });
+        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+            prefs.putInt(PREF_MAIN_WINDOW_HEIGHT, newValue.intValue());
+        });
+
 
         return scene;
+    }
+
+    /**
+     * sets up and initializes the map view.
+     */
+    private void setupMapView() {
+        mapView = new MapView();
+        mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                logger.trace(I18N.get(I18N.LOG_MAP_INITIALIZED));
+                // show Europe
+                mapView.setCenter(new Coordinate(46.67959446564012, 5.537109374999998));
+                mapView.setZoom(5);
+            }
+        });
+        mapView.initialize();
     }
 
     /**
@@ -148,6 +178,7 @@ public class TrakxmapApp extends Application {
         Label labelLanguages = I18N.labelForKey(I18N.LABEL_SWITCH_LOCALE);
         // combobox for switching the locale
         ComboBox<Locale> comboLanguages = new ComboBox<>();
+        comboLanguages.setTooltip(I18N.tooltipForKey(I18N.TOOLTIP_SWITCH_LOCALE));
         comboLanguages.setEditable(false);
         comboLanguages.getItems().addAll(I18N.getSupportedLocales());
         comboLanguages.setConverter(new StringConverter<Locale>() {
