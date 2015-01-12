@@ -1,0 +1,21 @@
+<configuration scan="true" debug="false">
+    <!-- context listener needed for redirection of JUL to slf4j to prevent performance problems -->
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.sothawo" level="TRACE" />
+
+    <!--  setting this to more than INFO crashes the JVM -->
+    <logger name="com.sun.javafx.webkit.prism" level = "info" />
+
+    <root level="WARN">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
