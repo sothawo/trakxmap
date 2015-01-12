@@ -1,4 +1,4 @@
-<configuration scan="true" debug="false">
+<configuration scan="true">
     <!-- context listener needed for redirection of JUL to slf4j to prevent performance problems -->
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />
 

@@ -15,6 +15,8 @@
 */
 package com.sothawo.trakxmap;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -23,29 +25,55 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import java.util.prefs.Preferences;
+
 /**
  * Trakxmap application class.
  */
 public class TrakxmapApp extends Application {
+// ------------------------------ FIELDS ------------------------------
+
     /** Logger for the class */
     private static final Logger logger;
 
-    // -------------------------- STATIC METHODS --------------------------
+    private static final String PREF_MAIN_WINDOW_WIDTH = "mainWindowWidth";
+    private static final String PREF_MAIN_WINDOW_HEIGHT = "mainWindowHeight";
+    private static final String CONF_WINDOW_TITLE = "windowTitle";
+
+    /** application configuration */
+    private final Config config = ConfigFactory.load().getConfig(TrakxmapApp.class.getCanonicalName());
+
+    /** user preferences */
+    private final Preferences prefs = Preferences.userNodeForPackage(TrakxmapApp.class);
+
+// -------------------------- STATIC METHODS --------------------------
+
     static {
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
         logger = LoggerFactory.getLogger(TrakxmapApp.class);
     }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+// -------------------------- OTHER METHODS --------------------------
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         logger.info("starting trakxmap program...");
 
-        // show the whole thing
+        primaryStage.setTitle(config.getString(CONF_WINDOW_TITLE));
+        primaryStage.setScene(setupPrimaryScene());
+
+        primaryStage.show();
+
+        logger.trace("application started.");
+    }
+
+    /**
+     * setup the scene for the primary stage..
+     *
+     * @return Scene
+     */
+    private Scene setupPrimaryScene() {
         Label label = new Label(
                 "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt " +
                         "ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo " +
@@ -58,13 +86,24 @@ public class TrakxmapApp extends Application {
                         "erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita " +
                         "kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.");
         label.setWrapText(true);
-        Scene scene = new Scene(label, 800, 600);
 
-        primaryStage.setTitle("sothawo trakxmap ");
-        primaryStage.setScene(scene);
-        primaryStage.show();
 
-        logger.trace("application started.");
+        // get the windows size from the preferences and add handlers to set size changes in the preferences
+        int windowWidth = prefs.getInt(PREF_MAIN_WINDOW_WIDTH, config.getInt(PREF_MAIN_WINDOW_WIDTH));
+        int windowHeight = prefs.getInt(PREF_MAIN_WINDOW_HEIGHT, config.getInt(PREF_MAIN_WINDOW_HEIGHT));
+        Scene scene = new Scene(label, windowWidth, windowHeight);
+        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+            prefs.putInt(PREF_MAIN_WINDOW_WIDTH, newValue.intValue());
+        });
+        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+            prefs.putInt(PREF_MAIN_WINDOW_HEIGHT, newValue.intValue());
+        });
+        return scene;
+    }
 
+// --------------------------- main() method ---------------------------
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }
