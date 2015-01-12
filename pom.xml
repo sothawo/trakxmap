@@ -120,6 +120,17 @@
                     </programs>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.zenjava</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>8.1.2</version>
+                <configuration>
+                    <mainClass>com.sothawo.trakxmap.TrakxmapApp</mainClass>
+                    <vendor>sothawo.com</vendor>
+                    <identifier>com.sothawo.trakxmap</identifier>
+                    <nativeReleaseVersion>${project.version}</nativeReleaseVersion>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

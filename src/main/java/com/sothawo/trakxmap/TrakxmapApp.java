@@ -20,10 +20,12 @@ import com.typesafe.config.ConfigFactory;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+
 
 import java.util.prefs.Preferences;
 
@@ -39,6 +41,7 @@ public class TrakxmapApp extends Application {
     private static final String PREF_MAIN_WINDOW_WIDTH = "mainWindowWidth";
     private static final String PREF_MAIN_WINDOW_HEIGHT = "mainWindowHeight";
     private static final String CONF_WINDOW_TITLE = "windowTitle";
+
 
     /** application configuration */
     private final Config config = ConfigFactory.load().getConfig(TrakxmapApp.class.getCanonicalName());
@@ -58,22 +61,45 @@ public class TrakxmapApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        logger.info("starting trakxmap program...");
+        logger.info(I18N.get(I18N.LOG_START_PROGRAM));
 
         primaryStage.setTitle(config.getString(CONF_WINDOW_TITLE));
         primaryStage.setScene(setupPrimaryScene());
 
         primaryStage.show();
 
-        logger.trace("application started.");
+        logger.trace(I18N.get(I18N.LOG_START_PROGRAM_FINISHED));
     }
 
     /**
-     * setup the scene for the primary stage..
+     * setup the scene for the primary stage.
      *
      * @return Scene
      */
     private Scene setupPrimaryScene() {
+        // all elements in a vbox (menu, toolbar, content, statusbar)
+
+        VBox sceneVBox = new VBox();
+        // get the windows size from the preferences and add handlers to set size changes in the preferences
+        int windowWidth = prefs.getInt(PREF_MAIN_WINDOW_WIDTH, config.getInt(PREF_MAIN_WINDOW_WIDTH));
+        int windowHeight = prefs.getInt(PREF_MAIN_WINDOW_HEIGHT, config.getInt(PREF_MAIN_WINDOW_HEIGHT));
+        Scene scene = new Scene(sceneVBox, windowWidth, windowHeight);
+        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+            prefs.putInt(PREF_MAIN_WINDOW_WIDTH, newValue.intValue());
+        });
+        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+            prefs.putInt(PREF_MAIN_WINDOW_HEIGHT, newValue.intValue());
+        });
+
+        // create menu
+        /*
+        MenuBar menuBar = new MenuBar();
+        menuBar.setUseSystemMenuBar(true);
+        Menu menuFile = new Menu("File");
+        menuBar.getMenus().add(menuFile);
+        sceneVBox.getChildren().add(menuBar);
+        */
+        // create content
         Label label = new Label(
                 "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt " +
                         "ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo " +
@@ -86,18 +112,8 @@ public class TrakxmapApp extends Application {
                         "erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita " +
                         "kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.");
         label.setWrapText(true);
+        sceneVBox.getChildren().add(label);
 
-
-        // get the windows size from the preferences and add handlers to set size changes in the preferences
-        int windowWidth = prefs.getInt(PREF_MAIN_WINDOW_WIDTH, config.getInt(PREF_MAIN_WINDOW_WIDTH));
-        int windowHeight = prefs.getInt(PREF_MAIN_WINDOW_HEIGHT, config.getInt(PREF_MAIN_WINDOW_HEIGHT));
-        Scene scene = new Scene(label, windowWidth, windowHeight);
-        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
-            prefs.putInt(PREF_MAIN_WINDOW_WIDTH, newValue.intValue());
-        });
-        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
-            prefs.putInt(PREF_MAIN_WINDOW_HEIGHT, newValue.intValue());
-        });
         return scene;
     }
 
