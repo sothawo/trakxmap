@@ -108,6 +108,22 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+                <version>0.12.3</version>
+                <configuration>
+                    <generatePackage>com.sothawo.trakxmap.generated.gpx</generatePackage>
+                    <enableIntrospection>true</enableIntrospection>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>appassembler-maven-plugin</artifactId>
                 <version>1.8.1</version>
