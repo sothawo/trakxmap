@@ -48,6 +48,7 @@ public class I18N {
     public static final String LOG_SHOWING_STAGE = "log.showing.stage";
     public static final String LOG_MAP_INITIALIZED = "log.map.initialized";
     public static final String LABEL_DUMMY_TRACKLIST = "label.dummy.tracklist";
+    public static final String LABEL_DROP_TRACKFILE_HERE = "label.drop.trackfile.here";
     public static final String LABEL_DUMMY_MAP = "label.dummy.map";
     public static final String LABEL_DUMMY_ELEVATION= "label.dummy.elevation";
 

@@ -20,14 +20,14 @@ import com.sothawo.mapjfx.MapView;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import javafx.application.Application;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.ToolBar;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -36,8 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.util.Locale;
-import java.util.Optional;
-import java.util.prefs.Preferences;
 
 /**
  * Trakxmap application class.
@@ -50,15 +48,17 @@ public class TrakxmapApp extends Application {
 
     private static final String PREF_MAIN_WINDOW_WIDTH = "mainWindowWidth";
     private static final String PREF_MAIN_WINDOW_HEIGHT = "mainWindowHeight";
-    private static final String CONF_WINDOW_TITLE = "windowTitle";
+    private static final String PREF_SPLIT_1_FIRST_DIVIDER = "split1FirstDivider";
+    private static final String PREF_SPLIT_2_FIRST_DIVIDER = "split2FirstDivider";
     private static final String PREF_LANGUAGE = "language";
+    private static final String CONF_WINDOW_TITLE = "windowTitle";
 
 
     /** application configuration */
     private final Config config = ConfigFactory.load().getConfig(TrakxmapApp.class.getCanonicalName());
 
     /** user preferences */
-    private final Preferences prefs = Preferences.userNodeForPackage(TrakxmapApp.class);
+    private final PreferencesBindings prefs = PreferencesBindings.forPackage(TrakxmapApp.class);
 
     /** the mapView to be used */
     private MapView mapView;
@@ -75,8 +75,8 @@ public class TrakxmapApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Optional.ofNullable(prefs.get(PREF_LANGUAGE, null))
-                .ifPresent(lang -> I18N.setLocale(Locale.forLanguageTag(lang)));
+        initLanguage();
+
         logger.info(I18N.get(I18N.LOG_START_PROGRAM));
 
         primaryStage.setTitle(config.getString(CONF_WINDOW_TITLE));
@@ -88,10 +88,30 @@ public class TrakxmapApp extends Application {
         logger.trace(I18N.get(I18N.LOG_START_PROGRAM_FINISHED));
     }
 
-    @Override
-    public void stop() throws Exception {
-        prefs.put(PREF_LANGUAGE, I18N.getLocale().toLanguageTag());
-        super.stop();
+    /**
+     * initialize language settings
+     */
+    private void initLanguage() {
+        // normally the bindBidirectional should be called on the object that should be set with the initial value
+        // from the other property. This is not possible here, as we need the mapping between Locale and String and
+        // therefore must call bindBidirectional on the StringProperty. So we store the value from the prefs and set
+        // it after the binding
+        SimpleStringProperty prop =
+                prefs.simpleStringPropertyFor(PREF_LANGUAGE, I18N.getDefaultLocale().toLanguageTag());
+
+        String lang = prop.getValue();
+        prop.bindBidirectional(I18N.localeProperty(), new StringConverter<Locale>() {
+            @Override
+            public String toString(Locale object) {
+                return object.toLanguageTag();
+            }
+
+            @Override
+            public Locale fromString(String string) {
+                return Locale.forLanguageTag(string);
+            }
+        });
+        prop.setValue(lang);
     }
 
     /**
@@ -118,12 +138,12 @@ public class TrakxmapApp extends Application {
         //in the center a splitpane for the tracks on the left and the map and the elevation diagram on the right
         SplitPane splitPane1 = new SplitPane();
         splitPane1.setOrientation(Orientation.HORIZONTAL);
+
         SplitPane splitPane2 = new SplitPane();
         splitPane2.setOrientation(Orientation.VERTICAL);
 
-
         // initialize the track view
-        splitPane1.getItems().add(I18N.labelForKey(I18N.LABEL_DUMMY_TRACKLIST));
+        splitPane1.getItems().add(setupTrackListNode());
 
         // initialize the map view
         setupMapView();
@@ -135,21 +155,37 @@ public class TrakxmapApp extends Application {
 
         splitPane1.getItems().add(splitPane2);
 
+        splitPane1.getDividers().get(0).positionProperty().bindBidirectional(
+                prefs.simpleDoublePropertyFor(PREF_SPLIT_1_FIRST_DIVIDER, 0.25));
+        splitPane2.getDividers().get(0).positionProperty().bindBidirectional(
+                prefs.simpleDoublePropertyFor(PREF_SPLIT_2_FIRST_DIVIDER, 0.75));
         content.setCenter(splitPane1);
 
         // get the windows size from the preferences and add handlers to set size changes in the preferences
-        int windowWidth = prefs.getInt(PREF_MAIN_WINDOW_WIDTH, config.getInt(PREF_MAIN_WINDOW_WIDTH));
-        int windowHeight = prefs.getInt(PREF_MAIN_WINDOW_HEIGHT, config.getInt(PREF_MAIN_WINDOW_HEIGHT));
-        Scene scene = new Scene(content, windowWidth, windowHeight);
-        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
-            prefs.putInt(PREF_MAIN_WINDOW_WIDTH, newValue.intValue());
-        });
-        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
-            prefs.putInt(PREF_MAIN_WINDOW_HEIGHT, newValue.intValue());
-        });
-
+        SimpleDoubleProperty widthProperty =
+                prefs.simpleDoublePropertyFor(PREF_MAIN_WINDOW_WIDTH, config.getInt(PREF_MAIN_WINDOW_WIDTH));
+        SimpleDoubleProperty heightProperty =
+                prefs.simpleDoublePropertyFor(PREF_MAIN_WINDOW_HEIGHT, config.getInt(PREF_MAIN_WINDOW_HEIGHT));
+        Scene scene = new Scene(content, widthProperty.get(), heightProperty.get());
+        widthProperty.bind(scene.widthProperty());
+        heightProperty.bind(scene.heightProperty());
 
         return scene;
+    }
+
+    /**
+     * builds the Node to contain the track list together with the add button/drop area at the top
+     *
+     * @return Node
+     */
+    private Node setupTrackListNode() {
+        VBox vBox = new VBox();
+        HBox dropArea = new HBox();
+        Button buttonAdd = new Button("+");
+        Label labelDropHere = I18N.labelForKey(I18N.LABEL_DROP_TRACKFILE_HERE);
+        dropArea.getChildren().addAll(buttonAdd, labelDropHere);
+        vBox.getChildren().addAll(dropArea, I18N.labelForKey(I18N.LABEL_DUMMY_TRACKLIST));
+        return vBox;
     }
 
     /**
