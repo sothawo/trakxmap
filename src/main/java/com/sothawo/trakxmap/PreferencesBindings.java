@@ -18,19 +18,23 @@ package com.sothawo.trakxmap;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.prefs.PreferenceChangeEvent;
+import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
 
 /**
  * Exposes bindable properties that are persisted in User Preferences. Instances are created for classes and cached.
- * Changes to the underlying Preferences object are NOT monitored.
+ *
+ * {@see java.util.prefs.Preferences} for details on the backing technique.
  *
  * @author P.J. Meisch (pj.meisch@sothawo.com).
  */
 public class PreferencesBindings {
 // ------------------------------ FIELDS ------------------------------
 
-    /** concurrent map for caching */
+    /** concurrent map for caching the different instances */
     private final static ConcurrentHashMap<Class<?>, PreferencesBindings> cache = new ConcurrentHashMap<>();
 
     /** the Java preferences */
@@ -41,6 +45,11 @@ public class PreferencesBindings {
 
     /** cache for SimpleStringProperties */
     private final ConcurrentHashMap<String, SimpleStringProperty> simpleStringProperties = new ConcurrentHashMap<>();
+
+    /** collect all the maps together */
+    @SuppressWarnings("unchecked")
+    private final Map<String, Class<?>>[] allPropertiesMaps = new Map[]{simpleStringProperties,
+                                                                        simpleDoubleProperties};
 
 // -------------------------- STATIC METHODS --------------------------
 
@@ -70,9 +79,69 @@ public class PreferencesBindings {
      */
     private PreferencesBindings(Class<?> c) {
         prefs = Preferences.userNodeForPackage(c);
+        prefs.addPreferenceChangeListener(new PreferenceChangeListener() {
+            @Override
+            public void preferenceChange(PreferenceChangeEvent evt) {
+                final String key = evt.getKey();
+                String newValue = evt.getNewValue();
+                if (null != newValue) {
+                    final String newStringValue = evt.getNewValue();
+                    simpleStringProperties.entrySet().stream()
+                            .filter(entry -> entry.getKey().equals(key))
+                            .forEach(entry -> {
+                                entry.getValue().set(newStringValue);
+                            });
+
+                    Double doubleValue = null;
+                    try {
+                        doubleValue = Double.valueOf(evt.getNewValue());
+                    } catch (NumberFormatException ignored) {
+                    }
+                    if (null != doubleValue) {
+                        final double newDoubleValue = doubleValue;
+                        simpleDoubleProperties.entrySet().stream().filter(entry -> entry.getKey().equals(key))
+                                .forEach(entry -> entry
+                                        .getValue().set(newDoubleValue));
+                    }
+                }
+            }
+        });
     }
 
 // -------------------------- OTHER METHODS --------------------------
+
+    /**
+     * checks if any of the properties map contains an entry with the given key
+     *
+     * @param key
+     *         the key to check
+     * @return true if found
+     */
+    public boolean hasAny(String key) {
+        for (Map<String, Class<?>> map : allPropertiesMaps) {
+            if (map.containsKey(key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * removes the properties for the given key from the internal structures. This does not guarantee, that these are
+     * not referenced anywhere else. On the next property creation a new property is returned. The underlying value is
+     * removed as well.<br><br>
+     *
+     * USE ONLY IF REALLY NEEDED.
+     *
+     * @param key
+     *         key of the properties to be removed
+     */
+    public void remove(String key) {
+        for (Map<String, Class<?>> map : allPropertiesMaps) {
+            map.remove(key);
+        }
+        prefs.remove(key);
+    }
 
     /**
      * creates a SimpleDoubleProperty for the given preference key.
@@ -91,14 +160,15 @@ public class PreferencesBindings {
         }
         return simpleDoubleProperties.computeIfAbsent(key, (k) -> {
             SimpleDoubleProperty prop = new SimpleDoubleProperty();
-            prop.setValue(prefs.getDouble(k, def));
             prop.addListener((observable, oldValue, newValue) -> {
                         prefs.putDouble(k, newValue.doubleValue());
                     }
             );
+            prop.set(prefs.getDouble(k, def));
             return prop;
         });
     }
+
     /**
      * creates a SimpleStringProperty for the given preference key.
      *
@@ -116,12 +186,15 @@ public class PreferencesBindings {
         }
         return simpleStringProperties.computeIfAbsent(key, (k) -> {
             SimpleStringProperty prop = new SimpleStringProperty();
-            prop.setValue(prefs.get(k, def));
             prop.addListener((observable, oldValue, newValue) -> {
                         prefs.put(k, newValue);
                     }
             );
+            prop.set(prefs.get(k, def));
             return prop;
         });
     }
+
+// -------------------------- INNER CLASSES --------------------------
+
 }
