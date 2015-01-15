@@ -26,6 +26,8 @@ import java.util.prefs.Preferences;
 
 /**
  * Exposes bindable properties that are persisted in User Preferences. Instances are created for classes and cached.
+ * When using this class, the original Preferences should not be used, as changes vi the Preferences API are not
+ * monitored.
  *
  * {@see java.util.prefs.Preferences} for details on the backing technique.
  *
@@ -79,33 +81,6 @@ public class PreferencesBindings {
      */
     private PreferencesBindings(Class<?> c) {
         prefs = Preferences.userNodeForPackage(c);
-        prefs.addPreferenceChangeListener(new PreferenceChangeListener() {
-            @Override
-            public void preferenceChange(PreferenceChangeEvent evt) {
-                final String key = evt.getKey();
-                String newValue = evt.getNewValue();
-                if (null != newValue) {
-                    final String newStringValue = evt.getNewValue();
-                    simpleStringProperties.entrySet().stream()
-                            .filter(entry -> entry.getKey().equals(key))
-                            .forEach(entry -> {
-                                entry.getValue().set(newStringValue);
-                            });
-
-                    Double doubleValue = null;
-                    try {
-                        doubleValue = Double.valueOf(evt.getNewValue());
-                    } catch (NumberFormatException ignored) {
-                    }
-                    if (null != doubleValue) {
-                        final double newDoubleValue = doubleValue;
-                        simpleDoubleProperties.entrySet().stream().filter(entry -> entry.getKey().equals(key))
-                                .forEach(entry -> entry
-                                        .getValue().set(newDoubleValue));
-                    }
-                }
-            }
-        });
     }
 
 // -------------------------- OTHER METHODS --------------------------

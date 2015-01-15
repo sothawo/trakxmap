@@ -92,16 +92,4 @@ public class PreferencesBindingsTest {
         assertEquals(VAL_STRING_1, prop.get());
         assertEquals(VAL_STRING_1, javaPrefs.get(KEY_STRING_1, null));
     }
-
-    @Test
-    public void modifyUnderlyingStringChangesProperty() throws Exception {
-        PreferencesBindings prefs = PreferencesBindings.forPackage(PreferencesBindingsTest.class);
-        SimpleStringProperty prop = prefs.simpleStringPropertyFor(KEY_STRING_1, DEF_STRING_1);
-        assertEquals(DEF_STRING_1, prop.get());
-        javaPrefs.put(KEY_STRING_1, VAL_STRING_1);
-        javaPrefs.flush();
-        // need a little time to get the change from the underlying system, atleast on OSX
-        Thread.sleep(500);
-        assertEquals(VAL_STRING_1, prop.get());
-    }
 }
