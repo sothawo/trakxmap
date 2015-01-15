@@ -1,0 +1,14 @@
+.root {
+}
+
+.track-droparea {
+    -fx-padding: 10;
+    -fx-spacing: 10;
+    -fx-background-radius: 10;
+    -fx-alignment: center;
+    -fx-background-color: #ddd;
+    -fx-background-radius: 10px;
+    -fx-border-color: #999;
+    -fx-border-width: 2px;
+    -fx-border-radius: 10px;
+}

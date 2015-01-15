@@ -170,6 +170,8 @@ public class TrakxmapApp extends Application {
         widthProperty.bind(scene.widthProperty());
         heightProperty.bind(scene.heightProperty());
 
+        scene.getStylesheets().add("/trakxmap.css");
+
         return scene;
     }
 
@@ -184,6 +186,8 @@ public class TrakxmapApp extends Application {
         Button buttonAdd = new Button("+");
         Label labelDropHere = I18N.labelForKey(I18N.LABEL_DROP_TRACKFILE_HERE);
         dropArea.getChildren().addAll(buttonAdd, labelDropHere);
+        dropArea.getStyleClass().add("track-droparea");
+
         vBox.getChildren().addAll(dropArea, I18N.labelForKey(I18N.LABEL_DUMMY_TRACKLIST));
         return vBox;
     }
