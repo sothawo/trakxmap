@@ -7,8 +7,9 @@
     -fx-background-radius: 10;
     -fx-alignment: center;
     -fx-background-color: #ddd;
-    -fx-background-radius: 10px;
+    -fx-background-radius: 7px;
     -fx-border-color: #999;
     -fx-border-width: 2px;
-    -fx-border-radius: 10px;
+    -fx-border-radius: 7px;
 }
+

@@ -26,6 +26,7 @@ import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -35,7 +36,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import java.io.File;
+import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Trakxmap application class.
@@ -142,7 +146,7 @@ public class TrakxmapApp extends Application {
         SplitPane splitPane2 = new SplitPane();
         splitPane2.setOrientation(Orientation.VERTICAL);
 
-        // initialize the track view
+        // initialize the loadTrackFiles view
         splitPane1.getItems().add(setupTrackListNode());
 
         // initialize the map view
@@ -176,7 +180,7 @@ public class TrakxmapApp extends Application {
     }
 
     /**
-     * builds the Node to contain the track list together with the add button/drop area at the top
+     * builds the Node to contain the loadTrackFiles list together with the add button/drop area at the top
      *
      * @return Node
      */
@@ -187,9 +191,28 @@ public class TrakxmapApp extends Application {
         Label labelDropHere = I18N.labelForKey(I18N.LABEL_DROP_TRACKFILE_HERE);
         dropArea.getChildren().addAll(buttonAdd, labelDropHere);
         dropArea.getStyleClass().add("track-droparea");
+        dropArea.setOnDragOver((evt) -> {
+                    if (evt.getGestureSource() != dropArea && evt.getDragboard().hasFiles()) {
+                        evt.acceptTransferModes(TransferMode.ANY);
+                    }
+                    evt.consume();
+                }
+        );
+        dropArea.setOnDragDropped((evt) -> {
+            Optional.ofNullable(evt.getDragboard().getFiles()).ifPresent(this::loadTrackFiles);
+            evt.consume();
+        });
 
         vBox.getChildren().addAll(dropArea, I18N.labelForKey(I18N.LABEL_DUMMY_TRACKLIST));
         return vBox;
+    }
+
+    /**
+     * tries to lad the given loadTrackFiles files
+     * @param files loadTrackFiles file names
+     */
+    private void loadTrackFiles(List<File> files) {
+        files.forEach((file)-> logger.debug("try to load " + file));
     }
 
     /**
