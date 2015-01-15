@@ -30,6 +30,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
@@ -52,8 +53,8 @@ public class TrakxmapApp extends Application {
 
     private static final String PREF_MAIN_WINDOW_WIDTH = "mainWindowWidth";
     private static final String PREF_MAIN_WINDOW_HEIGHT = "mainWindowHeight";
-    private static final String PREF_SPLIT_1_FIRST_DIVIDER = "split1FirstDivider";
-    private static final String PREF_SPLIT_2_FIRST_DIVIDER = "split2FirstDivider";
+    private static final String PREF_SPLIT_1 = "split1FirstDivider";
+    private static final String PREF_SPLIT_2 = "split2FirstDivider";
     private static final String PREF_LANGUAGE = "language";
     private static final String CONF_WINDOW_TITLE = "windowTitle";
 
@@ -64,8 +65,14 @@ public class TrakxmapApp extends Application {
     /** user preferences */
     private final PreferencesBindings prefs = PreferencesBindings.forPackage(TrakxmapApp.class);
 
+    /** reference to the priomary Stage */
+    private Stage primaryStage;
+
     /** the mapView to be used */
     private MapView mapView;
+
+    /** the FileChooser for loading files; as field to keep state between calls, created when first needed */
+    private FileChooser fileChooserTrackfiles;
 
 // -------------------------- STATIC METHODS --------------------------
 
@@ -77,8 +84,19 @@ public class TrakxmapApp extends Application {
 
 // -------------------------- OTHER METHODS --------------------------
 
+    /**
+     * tries to lad the given track files
+     *
+     * @param files
+     *         file names
+     */
+    private void loadTrackFiles(List<File> files) {
+        files.forEach((file) -> logger.debug("try to load " + file));
+    }
+
     @Override
     public void start(Stage primaryStage) throws Exception {
+        this.primaryStage = primaryStage;
         initLanguage();
 
         logger.info(I18N.get(I18N.LOG_START_PROGRAM));
@@ -159,10 +177,14 @@ public class TrakxmapApp extends Application {
 
         splitPane1.getItems().add(splitPane2);
 
-        splitPane1.getDividers().get(0).positionProperty().bindBidirectional(
-                prefs.simpleDoublePropertyFor(PREF_SPLIT_1_FIRST_DIVIDER, 0.25));
-        splitPane2.getDividers().get(0).positionProperty().bindBidirectional(
-                prefs.simpleDoublePropertyFor(PREF_SPLIT_2_FIRST_DIVIDER, 0.75));
+        SimpleDoubleProperty slider1Prop = prefs.simpleDoublePropertyFor(PREF_SPLIT_1, 0.25);
+        splitPane1.setDividerPositions(slider1Prop.get());
+        slider1Prop.bind(splitPane1.getDividers().get(0).positionProperty());
+
+        SimpleDoubleProperty slider2Prop = prefs.simpleDoublePropertyFor(PREF_SPLIT_2, 0.75);
+        splitPane2.setDividerPositions(slider2Prop.get());
+        slider2Prop.bind(splitPane2.getDividers().get(0).positionProperty());
+
         content.setCenter(splitPane1);
 
         // get the windows size from the preferences and add handlers to set size changes in the preferences
@@ -177,58 +199,6 @@ public class TrakxmapApp extends Application {
         scene.getStylesheets().add("/trakxmap.css");
 
         return scene;
-    }
-
-    /**
-     * builds the Node to contain the loadTrackFiles list together with the add button/drop area at the top
-     *
-     * @return Node
-     */
-    private Node setupTrackListNode() {
-        VBox vBox = new VBox();
-        HBox dropArea = new HBox();
-        Button buttonAdd = new Button("+");
-        Label labelDropHere = I18N.labelForKey(I18N.LABEL_DROP_TRACKFILE_HERE);
-        dropArea.getChildren().addAll(buttonAdd, labelDropHere);
-        dropArea.getStyleClass().add("track-droparea");
-        dropArea.setOnDragOver((evt) -> {
-                    if (evt.getGestureSource() != dropArea && evt.getDragboard().hasFiles()) {
-                        evt.acceptTransferModes(TransferMode.ANY);
-                    }
-                    evt.consume();
-                }
-        );
-        dropArea.setOnDragDropped((evt) -> {
-            Optional.ofNullable(evt.getDragboard().getFiles()).ifPresent(this::loadTrackFiles);
-            evt.consume();
-        });
-
-        vBox.getChildren().addAll(dropArea, I18N.labelForKey(I18N.LABEL_DUMMY_TRACKLIST));
-        return vBox;
-    }
-
-    /**
-     * tries to lad the given loadTrackFiles files
-     * @param files loadTrackFiles file names
-     */
-    private void loadTrackFiles(List<File> files) {
-        files.forEach((file)-> logger.debug("try to load " + file));
-    }
-
-    /**
-     * sets up and initializes the map view.
-     */
-    private void setupMapView() {
-        mapView = new MapView();
-        mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                logger.trace(I18N.get(I18N.LOG_MAP_INITIALIZED));
-                // show Europe
-                mapView.setCenter(new Coordinate(46.67959446564012, 5.537109374999998));
-                mapView.setZoom(5);
-            }
-        });
-        mapView.initialize();
     }
 
     /**
@@ -260,6 +230,65 @@ public class TrakxmapApp extends Application {
         I18N.localeProperty().bindBidirectional(comboLanguages.valueProperty());
 
         return new ToolBar(labelLanguages, comboLanguages);
+    }
+
+    /**
+     * sets up and initializes the map view.
+     */
+    private void setupMapView() {
+        mapView = new MapView();
+        mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                logger.trace(I18N.get(I18N.LOG_MAP_INITIALIZED));
+                // show Europe
+                mapView.setCenter(new Coordinate(46.67959446564012, 5.537109374999998));
+                mapView.setZoom(5);
+            }
+        });
+        mapView.initialize();
+    }
+
+    /**
+     * builds the Node to contain the loadTrackFiles list together with the add button/drop area at the top
+     *
+     * @return Node
+     */
+    private Node setupTrackListNode() {
+        VBox vBox = new VBox();
+        HBox dropArea = new HBox();
+        Button buttonAdd = new Button("+");
+        buttonAdd.setOnAction((evt) -> {
+            if (null == fileChooserTrackfiles) {
+                fileChooserTrackfiles = new FileChooser();
+                fileChooserTrackfiles.titleProperty().bind(I18N.getStringBinding(I18N.LABEL_FILECHOOSER_TRACKS));
+            }
+            // extension filters are set new every time, the language may have changed, their are noct bindable
+            fileChooserTrackfiles.getExtensionFilters().clear();
+            fileChooserTrackfiles.getExtensionFilters().addAll(new FileChooser.ExtensionFilter(I18N.get(I18N
+                    .EXT_FILE_GPX), "*.gpx"), new FileChooser.ExtensionFilter(I18N.get(I18N.EXT_FILE_ALL), "*.*"));
+
+            logger.debug(Locale.getDefault(Locale.Category.DISPLAY).toString());
+            Optional.ofNullable(fileChooserTrackfiles.showOpenMultipleDialog(primaryStage))
+                    .ifPresent(this::loadTrackFiles);
+        });
+
+        Label labelDropHere = I18N.labelForKey(I18N.LABEL_DROP_TRACKFILE_HERE);
+        dropArea.getChildren().addAll(buttonAdd, labelDropHere);
+        dropArea.getStyleClass().add("track-droparea");
+        dropArea.setOnDragOver((evt) -> {
+                    if (evt.getGestureSource() != dropArea && evt.getDragboard().hasFiles()) {
+                        evt.acceptTransferModes(TransferMode.ANY);
+                    }
+                    evt.consume();
+                }
+        );
+        dropArea.setOnDragDropped((evt) -> {
+            Optional.ofNullable(evt.getDragboard().getFiles()).ifPresent(this::loadTrackFiles);
+            evt.consume();
+        });
+
+        vBox.getChildren().addAll(dropArea, I18N.labelForKey(I18N.LABEL_DUMMY_TRACKLIST));
+        return vBox;
     }
 
 // --------------------------- main() method ---------------------------

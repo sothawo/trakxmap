@@ -16,6 +16,7 @@
 package com.sothawo.trakxmap;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Label;
@@ -32,25 +33,26 @@ import java.util.ResourceBundle;
 /**
  * Utility methods.<br><br>
  *
- * locale property code idea from
- * http://stackoverflow.com/questions/25793841/javafx-bindings-and-localization/25794225#25794225
+ * locale property code idea from http://stackoverflow.com/questions/25793841/javafx-bindings-and-localization/25794225#25794225
  *
  * @author P.J. Meisch (pj.meisch@sothawo.com).
  */
 public class I18N {
 // ------------------------------ FIELDS ------------------------------
 
-    public static final  String LOG_START_PROGRAM = "log.start.program";
-    public static final String LOG_START_PROGRAM_FINISHED = "log.start.program.finished";
-    public static final String LOG_SWITCH_LOCALE = "log.switch.locale";
+    public static final String EXT_FILE_GPX = "extension.file.gpx";
+    public static final String EXT_FILE_ALL = "extension.file.all";
     public static final String LABEL_SWITCH_LOCALE = "label.switch.locale";
-    public static final String TOOLTIP_SWITCH_LOCALE = "tooltip.switch.locale";
-    public static final String LOG_SHOWING_STAGE = "log.showing.stage";
-    public static final String LOG_MAP_INITIALIZED = "log.map.initialized";
     public static final String LABEL_DUMMY_TRACKLIST = "label.dummy.tracklist";
     public static final String LABEL_DROP_TRACKFILE_HERE = "label.drop.trackfile.here";
-    public static final String LABEL_DUMMY_MAP = "label.dummy.map";
-    public static final String LABEL_DUMMY_ELEVATION= "label.dummy.elevation";
+    public static final String LABEL_FILECHOOSER_TRACKS = "label.filechooser.tracks";
+    public static final String LABEL_DUMMY_ELEVATION = "label.dummy.elevation";
+    public static final String LOG_START_PROGRAM = "log.start.program";
+    public static final String LOG_START_PROGRAM_FINISHED = "log.start.program.finished";
+    public static final String LOG_SWITCH_LOCALE = "log.switch.locale";
+    public static final String LOG_SHOWING_STAGE = "log.showing.stage";
+    public static final String LOG_MAP_INITIALIZED = "log.map.initialized";
+    public static final String TOOLTIP_SWITCH_LOCALE = "tooltip.switch.locale";
 
     private static final Logger logger = LoggerFactory.getLogger(I18N.class);
     private static final ObjectProperty<Locale> locale;
@@ -60,14 +62,16 @@ public class I18N {
     static {
         locale = new SimpleObjectProperty<>(getDefaultLocale());
         locale.addListener((observable, oldValue, newValue) -> logger.info(get(LOG_SWITCH_LOCALE, oldValue,
-        newValue)));
+                newValue)));
     }
+
     public static ObjectProperty<Locale> localeProperty() {
         return locale;
     }
 
     public static void setLocale(Locale locale) {
         localeProperty().set(locale);
+        Locale.setDefault(locale);
     }
 
     public static List<Locale> getSupportedLocales() {
@@ -84,13 +88,39 @@ public class I18N {
 
     /**
      * creates a bound Label for the given resourcebundle key
-     * @param key ResourceBundle key
+     *
+     * @param key
+     *         ResourceBundle key
      * @return Label
      */
     public static Label labelForKey(final String key) {
         Label label = new Label();
-        label.textProperty().bind(Bindings.createStringBinding(() -> get(key), locale));
+        label.textProperty().bind(getStringBinding(key));
         return label;
+    }
+
+    /**
+     * creates a bound Label for the given resourcebundle key
+     *
+     * @param key
+     *         ResourceBundle key
+     * @return Label
+     */
+    public static Tooltip tooltipForKey(final String key) {
+        Tooltip tooltip = new Tooltip();
+        tooltip.textProperty().bind(getStringBinding(key));
+        return tooltip;
+    }
+
+    /**
+     * creates a String binding to localized String for the given message bundle key
+     *
+     * @param key
+     *         key
+     * @return String binding
+     */
+    public static StringBinding getStringBinding(String key) {
+        return Bindings.createStringBinding(() -> get(key), locale);
     }
 
     public static String get(String key, Object... args) {
@@ -100,16 +130,5 @@ public class I18N {
 
     public static Locale getLocale() {
         return locale.get();
-    }
-
-    /**
-     * creates a bound Label for the given resourcebundle key
-     * @param key ResourceBundle key
-     * @return Label
-     */
-    public static Tooltip tooltipForKey(final String key) {
-        Tooltip tooltip = new Tooltip();
-        tooltip.textProperty().bind(Bindings.createStringBinding(() -> get(key), locale));
-        return tooltip;
     }
 }
