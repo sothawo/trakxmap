@@ -1,4 +1,18 @@
+/*
+ JavaFX elements
+ */
 .root {
+}
+
+.split-pane > .split-pane-divider {
+    -fx-padding: 0 2px 0 1px;
+}
+
+/*
+ different items
+ */
+.track-list-node {
+    -fx-background-color: #ddd;
 }
 
 .track-droparea {
@@ -6,10 +20,8 @@
     -fx-spacing: 10;
     -fx-background-radius: 10;
     -fx-alignment: center;
-    -fx-background-color: #ddd;
-    -fx-background-radius: 7px;
     -fx-border-color: #999;
     -fx-border-width: 2px;
-    -fx-border-radius: 7px;
+    -fx-border-radius: 5px;
 }
 

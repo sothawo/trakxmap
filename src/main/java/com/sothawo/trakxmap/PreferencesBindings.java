@@ -20,8 +20,6 @@ import javafx.beans.property.SimpleStringProperty;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.prefs.PreferenceChangeEvent;
-import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
 
 /**
@@ -29,7 +27,7 @@ import java.util.prefs.Preferences;
  * When using this class, the original Preferences should not be used, as changes vi the Preferences API are not
  * monitored.
  *
- * {@see java.util.prefs.Preferences} for details on the backing technique.
+ * {@link java.util.prefs.Preferences} for details on the backing technique.
  *
  * @author P.J. Meisch (pj.meisch@sothawo.com).
  */

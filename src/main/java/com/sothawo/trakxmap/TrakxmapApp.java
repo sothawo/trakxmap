@@ -71,9 +71,6 @@ public class TrakxmapApp extends Application {
     /** the mapView to be used */
     private MapView mapView;
 
-    /** the FileChooser for loading files; as field to keep state between calls, created when first needed */
-    private FileChooser fileChooserTrackfiles;
-
 // -------------------------- STATIC METHODS --------------------------
 
     static {
@@ -165,7 +162,7 @@ public class TrakxmapApp extends Application {
         splitPane2.setOrientation(Orientation.VERTICAL);
 
         // initialize the loadTrackFiles view
-        splitPane1.getItems().add(setupTrackListNode());
+        splitPane1.getItems().add(createTrackListNode());
 
         // initialize the map view
         setupMapView();
@@ -253,22 +250,19 @@ public class TrakxmapApp extends Application {
      *
      * @return Node
      */
-    private Node setupTrackListNode() {
+    private Node createTrackListNode() {
         VBox vBox = new VBox();
+        vBox.getStyleClass().add("track-list-node");
+        // dropArea for track files
         HBox dropArea = new HBox();
         Button buttonAdd = new Button("+");
         buttonAdd.setOnAction((evt) -> {
-            if (null == fileChooserTrackfiles) {
-                fileChooserTrackfiles = new FileChooser();
-                fileChooserTrackfiles.titleProperty().bind(I18N.getStringBinding(I18N.LABEL_FILECHOOSER_TRACKS));
-            }
-            // extension filters are set new every time, the language may have changed, their are noct bindable
-            fileChooserTrackfiles.getExtensionFilters().clear();
-            fileChooserTrackfiles.getExtensionFilters().addAll(new FileChooser.ExtensionFilter(I18N.get(I18N
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.titleProperty().bind(I18N.getStringBinding(I18N.LABEL_FILECHOOSER_TRACKS));
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter(I18N.get(I18N
                     .EXT_FILE_GPX), "*.gpx"), new FileChooser.ExtensionFilter(I18N.get(I18N.EXT_FILE_ALL), "*.*"));
-
-            logger.debug(Locale.getDefault(Locale.Category.DISPLAY).toString());
-            Optional.ofNullable(fileChooserTrackfiles.showOpenMultipleDialog(primaryStage))
+            fileChooser.setSelectedExtensionFilter(fileChooser.getExtensionFilters().get(0));
+            Optional.ofNullable(fileChooser.showOpenMultipleDialog(primaryStage))
                     .ifPresent(this::loadTrackFiles);
         });
 
@@ -277,7 +271,7 @@ public class TrakxmapApp extends Application {
         dropArea.getStyleClass().add("track-droparea");
         dropArea.setOnDragOver((evt) -> {
                     if (evt.getGestureSource() != dropArea && evt.getDragboard().hasFiles()) {
-                        evt.acceptTransferModes(TransferMode.ANY);
+                        evt.acceptTransferModes(TransferMode.COPY);
                     }
                     evt.consume();
                 }
