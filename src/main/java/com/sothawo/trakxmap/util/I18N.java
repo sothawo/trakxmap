@@ -43,7 +43,7 @@ public class I18N {
     public static final String EXT_FILE_GPX = "extension.file.gpx";
     public static final String EXT_FILE_ALL = "extension.file.all";
     public static final String LABEL_SWITCH_LOCALE = "label.switch.locale";
-    public static final String LABEL_DUMMY_TRACKLIST = "label.dummy.tracklist";
+    public static final String LABEL_TITLE_TRACKLIST = "label.title.tracklist";
     public static final String LABEL_DROP_TRACKFILE_HERE = "label.drop.trackfile.here";
     public static final String LABEL_FILECHOOSER_TRACKS = "label.filechooser.tracks";
     public static final String LABEL_DUMMY_ELEVATION = "label.dummy.elevation";

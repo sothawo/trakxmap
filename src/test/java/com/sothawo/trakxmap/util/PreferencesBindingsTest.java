@@ -15,7 +15,6 @@
 */
 package com.sothawo.trakxmap.util;
 
-import com.sothawo.trakxmap.PreferencesBindings;
 import javafx.beans.property.SimpleStringProperty;
 import org.junit.Before;
 import org.junit.Test;

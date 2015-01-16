@@ -13,11 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package com.sothawo.trakxmap.util;
+package com.sothawo.trakxmap;
 
 import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.MapView;
-import com.sothawo.trakxmap.PreferencesBindings;
+import com.sothawo.trakxmap.util.I18N;
+import com.sothawo.trakxmap.util.PreferencesBindings;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import javafx.application.Application;
@@ -83,7 +84,7 @@ public class TrakxmapApp extends Application {
 // -------------------------- OTHER METHODS --------------------------
 
     /**
-     * tries to lad the given track files
+     * tries to load the given track files.
      *
      * @param files
      *         file names
@@ -163,7 +164,7 @@ public class TrakxmapApp extends Application {
         splitPane2.setOrientation(Orientation.VERTICAL);
 
         // initialize the loadTrackFiles view
-        splitPane1.getItems().add(createTrackListNode());
+        splitPane1.getItems().add(createTracksViewNode());
 
         // initialize the map view
         setupMapView();
@@ -231,30 +232,23 @@ public class TrakxmapApp extends Application {
     }
 
     /**
-     * sets up and initializes the map view.
-     */
-    private void setupMapView() {
-        mapView = new MapView();
-        mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                logger.trace(I18N.get(I18N.LOG_MAP_INITIALIZED));
-                // show Europe
-                mapView.setCenter(new Coordinate(46.67959446564012, 5.537109374999998));
-                mapView.setZoom(5);
-            }
-        });
-        mapView.initialize();
-    }
-
-    /**
-     * builds the Node to contain the loadTrackFiles list together with the add button/drop area at the top
+     * builds the Node to contain the track list together with the add button/drop area at the top
      *
      * @return Node
      */
-    private Node createTrackListNode() {
+    private Node createTracksViewNode() {
         VBox vBox = new VBox();
         vBox.getStyleClass().add("track-list-node");
-        // dropArea for track files
+        vBox.getChildren().addAll(createTrackFileDropArea(), createTrackListNode());
+        return vBox;
+    }
+
+    /**
+     * creates the Node that is used as a drop area to add new files; contains an add-button as well.
+     *
+     * @return Node
+     */
+    private Node createTrackFileDropArea() {
         HBox dropArea = new HBox();
         Button buttonAdd = new Button("+");
         buttonAdd.setOnAction((evt) -> {
@@ -281,9 +275,38 @@ public class TrakxmapApp extends Application {
             Optional.ofNullable(evt.getDragboard().getFiles()).ifPresent(this::loadTrackFiles);
             evt.consume();
         });
+        return dropArea;
+    }
 
-        vBox.getChildren().addAll(dropArea, I18N.labelForKey(I18N.LABEL_DUMMY_TRACKLIST));
-        return vBox;
+    /**
+     * creates the node containing the track list
+     *
+     * @return Node
+     */
+    private Node createTrackListNode() {
+        TitledPane titledPane = new TitledPane();
+        titledPane.setCollapsible(false);
+        titledPane.textProperty().bind(I18N.getStringBinding(I18N.LABEL_TITLE_TRACKLIST));
+        titledPane.setPrefHeight(Double.MAX_VALUE);
+        ListView trackListView = new ListView();
+        titledPane.setContent(trackListView);
+        return titledPane;
+    }
+
+    /**
+     * sets up and initializes the map view.
+     */
+    private void setupMapView() {
+        mapView = new MapView();
+        mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                logger.trace(I18N.get(I18N.LOG_MAP_INITIALIZED));
+                // show Europe
+                mapView.setCenter(new Coordinate(46.67959446564012, 5.537109374999998));
+                mapView.setZoom(5);
+            }
+        });
+        mapView.initialize();
     }
 
 // --------------------------- main() method ---------------------------
