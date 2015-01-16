@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package com.sothawo.trakxmap;
+package com.sothawo.trakxmap.util;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;

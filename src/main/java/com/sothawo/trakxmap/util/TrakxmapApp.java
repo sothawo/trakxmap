@@ -13,10 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package com.sothawo.trakxmap;
+package com.sothawo.trakxmap.util;
 
 import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.MapView;
+import com.sothawo.trakxmap.PreferencesBindings;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import javafx.application.Application;

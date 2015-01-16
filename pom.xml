@@ -3,7 +3,7 @@
 
     <groupId>com.sothawo</groupId>
     <artifactId>trakxmap</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -149,7 +149,7 @@
                     <programs>
                         <program>
                             <id>trakxmap</id>
-                            <mainClass>com.sothawo.trakxmap.TrakxmapApp</mainClass>
+                            <mainClass>com.sothawo.trakxmap.util.TrakxmapApp</mainClass>
                         </program>
                     </programs>
                 </configuration>
@@ -159,7 +159,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>8.1.2</version>
                 <configuration>
-                    <mainClass>com.sothawo.trakxmap.TrakxmapApp</mainClass>
+                    <mainClass>com.sothawo.trakxmap.util.TrakxmapApp</mainClass>
                     <vendor>sothawo.com</vendor>
                     <identifier>com.sothawo.trakxmap</identifier>
                     <nativeReleaseVersion>${project.version}</nativeReleaseVersion>
