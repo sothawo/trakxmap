@@ -17,6 +17,8 @@ package com.sothawo.trakxmap;
 
 import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.MapView;
+import com.sothawo.trakxmap.control.TrackListCell;
+import com.sothawo.trakxmap.track.Track;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PreferencesBindings;
 import com.typesafe.config.Config;
@@ -24,21 +26,26 @@ import com.typesafe.config.ConfigFactory;
 import javafx.application.Application;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import java.io.DataOutput;
 import java.io.File;
 import java.util.List;
 import java.util.Locale;
@@ -73,6 +80,9 @@ public class TrakxmapApp extends Application {
     /** the mapView to be used */
     private MapView mapView;
 
+    /** the list containing the Tracks */
+    private ObservableList<Track> trackList = FXCollections.observableArrayList();
+
 // -------------------------- STATIC METHODS --------------------------
 
     static {
@@ -91,6 +101,7 @@ public class TrakxmapApp extends Application {
      */
     private void loadTrackFiles(List<File> files) {
         files.forEach((file) -> logger.debug("try to load " + file));
+        files.forEach((file)->trackList.add(new Track(file.getName())));
     }
 
     @Override
@@ -237,10 +248,12 @@ public class TrakxmapApp extends Application {
      * @return Node
      */
     private Node createTracksViewNode() {
-        VBox vBox = new VBox();
-        vBox.getStyleClass().add("track-list-node");
-        vBox.getChildren().addAll(createTrackFileDropArea(), createTrackListNode());
-        return vBox;
+        BorderPane borderPane = new BorderPane();
+
+        borderPane.getStyleClass().add("track-view-node");
+        borderPane.setTop(createTrackFileDropArea());
+        borderPane.setCenter(createTrackListNode());
+        return borderPane;
     }
 
     /**
@@ -286,10 +299,26 @@ public class TrakxmapApp extends Application {
     private Node createTrackListNode() {
         TitledPane titledPane = new TitledPane();
         titledPane.setCollapsible(false);
+        titledPane.setExpanded(true);
         titledPane.textProperty().bind(I18N.getStringBinding(I18N.LABEL_TITLE_TRACKLIST));
-        titledPane.setPrefHeight(Double.MAX_VALUE);
-        ListView trackListView = new ListView();
-        titledPane.setContent(trackListView);
+
+        ListView<Track> trackListView = new ListView<>(trackList);
+
+        trackListView.setCellFactory(new Callback<ListView<Track>, ListCell<Track>>() {
+            @Override
+            public ListCell<Track> call(ListView<Track> param) {
+                return new TrackListCell();
+            }
+        });
+        AnchorPane anchorPane = new AnchorPane(trackListView);
+        anchorPane.setId("track-list-anchorpane");
+        AnchorPane.setTopAnchor(trackListView, 0.0);
+        AnchorPane.setBottomAnchor(trackListView, 0.0);
+        AnchorPane.setLeftAnchor(trackListView, 0.0);
+        AnchorPane.setRightAnchor(trackListView, 0.0);
+        anchorPane.setPrefHeight(Double.MAX_VALUE);
+
+        titledPane.setContent(anchorPane);
         return titledPane;
     }
 

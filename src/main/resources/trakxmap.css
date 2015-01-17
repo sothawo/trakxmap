@@ -11,8 +11,13 @@
 /*
  different items
  */
-.track-list-node {
+.track-view-node {
     -fx-background-color: #ddd;
+}
+
+#track-list-anchorpane {
+    /* .titled-pane > .content > AnchorPane   is set to 0.8 em in modena.css */
+    -fx-padding: 0;
 }
 
 .track-droparea {

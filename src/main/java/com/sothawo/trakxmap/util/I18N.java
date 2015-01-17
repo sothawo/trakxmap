@@ -53,7 +53,7 @@ public class I18N {
     public static final String LOG_SHOWING_STAGE = "log.showing.stage";
     public static final String LOG_MAP_INITIALIZED = "log.map.initialized";
     public static final String TOOLTIP_SWITCH_LOCALE = "tooltip.switch.locale";
-    public static final String TOOLTIP_DROP_TRACKFILES = "tooltip.drop.trackfiles";
+    public static final String TRACK_NAME_DEFAULT = "track.name.default";
 
     private static final Logger logger = LoggerFactory.getLogger(I18N.class);
     private static final ObjectProperty<Locale> locale;
