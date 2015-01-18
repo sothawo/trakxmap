@@ -159,10 +159,11 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>8.1.2</version>
                 <configuration>
-                    <mainClass>com.sothawo.trakxmap.util.TrakxmapApp</mainClass>
+                    <mainClass>com.sothawo.trakxmap.TrakxmapApp</mainClass>
                     <vendor>sothawo.com</vendor>
                     <identifier>com.sothawo.trakxmap</identifier>
                     <nativeReleaseVersion>${project.version}</nativeReleaseVersion>
+                    <preLoader>com.sothawo.trakxmap.TrakxmapPreloader</preLoader>
                 </configuration>
             </plugin>
         </plugins>

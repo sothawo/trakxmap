@@ -31,6 +31,9 @@ public class Track {
 
 // --------------------------- CONSTRUCTORS ---------------------------
 
+    public Track() {
+    }
+
     public Track(String name) {
         this.name.set(name);
     }

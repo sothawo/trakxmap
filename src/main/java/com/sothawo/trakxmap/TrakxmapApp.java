@@ -19,6 +19,9 @@ import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.track.Track;
+import com.sothawo.trakxmap.track.TrackLoader;
+import com.sothawo.trakxmap.track.TrackLoaderFail;
+import com.sothawo.trakxmap.track.TrackLoaderGPX;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PreferencesBindings;
 import com.typesafe.config.Config;
@@ -36,20 +39,17 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import java.io.DataOutput;
 import java.io.File;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 
 /**
  * Trakxmap application class.
@@ -74,7 +74,7 @@ public class TrakxmapApp extends Application {
     /** user preferences */
     private final PreferencesBindings prefs = PreferencesBindings.forPackage(TrakxmapApp.class);
 
-    /** reference to the priomary Stage */
+    /** reference to the primary Stage */
     private Stage primaryStage;
 
     /** the mapView to be used */
@@ -82,6 +82,9 @@ public class TrakxmapApp extends Application {
 
     /** the list containing the Tracks */
     private ObservableList<Track> trackList = FXCollections.observableArrayList();
+
+    /** List with the available TrackLoaders in the order thy are used to load a file */
+    private final List<TrackLoader> trackLoaders = new ArrayList<>();
 
 // -------------------------- STATIC METHODS --------------------------
 
@@ -93,6 +96,14 @@ public class TrakxmapApp extends Application {
 
 // -------------------------- OTHER METHODS --------------------------
 
+    @Override
+    public void init() throws Exception {
+        super.init();
+        initLanguage();
+        trackLoaders.add(new TrackLoaderGPX());
+        trackLoaders.add(new TrackLoaderFail());
+    }
+
     /**
      * tries to load the given track files.
      *
@@ -100,14 +111,21 @@ public class TrakxmapApp extends Application {
      *         file names
      */
     private void loadTrackFiles(List<File> files) {
-        files.forEach((file) -> logger.debug("try to load " + file));
-        files.forEach((file)->trackList.add(new Track(file.getName())));
+        files.forEach((file) -> {
+            logger.info(I18N.get(I18N.LOG_LOADING_TRACK, file.toString()));
+            Optional<Track> track = Optional.empty();
+            Iterator<TrackLoader> trackLoaderIterator = trackLoaders.iterator();
+            while (!track.isPresent() && trackLoaderIterator.hasNext()) {
+                track = trackLoaderIterator.next().load(file);
+            }
+            track.ifPresent(trackList::add);
+        });
+        // TODO: show info about the failed files
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage = primaryStage;
-        initLanguage();
 
         logger.info(I18N.get(I18N.LOG_START_PROGRAM));
 
@@ -303,13 +321,8 @@ public class TrakxmapApp extends Application {
         titledPane.textProperty().bind(I18N.getStringBinding(I18N.LABEL_TITLE_TRACKLIST));
 
         ListView<Track> trackListView = new ListView<>(trackList);
+        trackListView.setCellFactory((listView -> new TrackListCell()));
 
-        trackListView.setCellFactory(new Callback<ListView<Track>, ListCell<Track>>() {
-            @Override
-            public ListCell<Track> call(ListView<Track> param) {
-                return new TrackListCell();
-            }
-        });
         AnchorPane anchorPane = new AnchorPane(trackListView);
         anchorPane.setId("track-list-anchorpane");
         AnchorPane.setTopAnchor(trackListView, 0.0);

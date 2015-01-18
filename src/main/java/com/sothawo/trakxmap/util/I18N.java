@@ -51,9 +51,11 @@ public class I18N {
     public static final String LOG_START_PROGRAM_FINISHED = "log.start.program.finished";
     public static final String LOG_SWITCH_LOCALE = "log.switch.locale";
     public static final String LOG_SHOWING_STAGE = "log.showing.stage";
+    public static final String LOG_LOADING_TRACK = "log.loading.track";
     public static final String LOG_MAP_INITIALIZED = "log.map.initialized";
     public static final String TOOLTIP_SWITCH_LOCALE = "tooltip.switch.locale";
     public static final String TRACK_NAME_DEFAULT = "track.name.default";
+    public static final String ERROR_LOADING_TRACK = "error.loading.track";
 
     private static final Logger logger = LoggerFactory.getLogger(I18N.class);
     private static final ObjectProperty<Locale> locale;
