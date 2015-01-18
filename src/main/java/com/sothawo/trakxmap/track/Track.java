@@ -18,6 +18,9 @@ package com.sothawo.trakxmap.track;
 import com.sothawo.trakxmap.util.I18N;
 import javafx.beans.property.SimpleStringProperty;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A track that can be displayed on the map with additional data.
  *
@@ -28,24 +31,39 @@ public class Track {
 
     /** the name of the track */
     private final SimpleStringProperty name = new SimpleStringProperty(I18N.get(I18N.TRACK_NAME_DEFAULT));
+    /** the waypoints of the track */
+    private final List<WayPoint> wayPoints = new ArrayList<>();
+    /** the trackpooints of the track */
+    private final List<WayPoint> trackPoints = new ArrayList<>();
 
-// --------------------------- CONSTRUCTORS ---------------------------
+    public List<WayPoint> getTrackPoints() {
+        return trackPoints;
+    }
+    // --------------------------- CONSTRUCTORS ---------------------------
 
     public Track() {
+    }
+
+    @Override
+    public String toString() {
+        return "Track{" +
+                "name=" + name +
+                ", wayPoints=" + wayPoints +
+                ", #trackPoints=" + trackPoints.size() +
+                '}';
     }
 
     public Track(String name) {
         this.name.set(name);
     }
 
-// ------------------------ CANONICAL METHODS ------------------------
+// --------------------- GETTER / SETTER METHODS ---------------------
 
-    @Override
-    public String toString() {
-        return "Track{" +
-                "name=" + getName() +
-                '}';
+    public List<WayPoint> getWayPoints() {
+        return wayPoints;
     }
+
+// ------------------------ CANONICAL METHODS ------------------------
 
     public String getName() {
         return name.get();

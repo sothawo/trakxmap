@@ -17,6 +17,7 @@ package com.sothawo.trakxmap.track;
 
 import com.sothawo.trakxmap.generated.gpx.GpxType;
 import com.sothawo.trakxmap.generated.gpx.MetadataType;
+import com.sothawo.trakxmap.generated.gpx.WptType;
 import com.sothawo.trakxmap.util.I18N;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,8 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -92,16 +95,46 @@ public class TrackLoaderGPX implements TrackLoader {
         // use info from metadata
         String metadataName = optionalMeta.flatMap((metadata) -> Optional.ofNullable(metadata.getName())).orElse("");
 
+        // get the waypoints
+        List<WayPoint> wayPoints = track.getWayPoints();
+        Optional.ofNullable(gpxType.getWpt())
+                .ifPresent((list) -> list.stream().map(this::createWayPoint).forEach(wayPoints::add));
+
         // process the tracks
         final List<String> trackNames = new ArrayList<>();
+        List<WayPoint> trackPoints = track.getTrackPoints();
         Optional.ofNullable(gpxType.getTrk()).ifPresent((trks) -> trks.forEach((trk) -> {
             Optional.ofNullable(trk.getName()).ifPresent(trackNames::add);
             // do other stuff with track
+            Optional.ofNullable(trk.getTrkseg()).ifPresent((trkSegs) -> trkSegs.forEach(
+                    (trkSeg) -> Optional.ofNullable(trkSeg.getTrkpt()).ifPresent(
+                            (trkPts) -> trkPts.stream().map(this::createWayPoint).forEach(trackPoints::add))));
         }));
 
         track.setName(buildTrackName(metadataName, trackNames, filename));
 
+        logger.debug("{}", track);
         return track;
+    }
+
+    /**
+     * creates a WayPoint object from a wptType object
+     *
+     * @param wptType
+     *         JAXB wptType
+     * @return WayPoint
+     */
+    private WayPoint createWayPoint(WptType wptType) {
+        Double latitude = Optional.ofNullable(wptType.getLat()).orElse(BigDecimal.ZERO).doubleValue();
+        Double longitude = Optional.ofNullable(wptType.getLon()).orElse(BigDecimal.ZERO).doubleValue();
+        Double elevation = Optional.ofNullable(wptType.getEle()).orElse(BigDecimal.ZERO).doubleValue();
+
+        ZonedDateTime timestamp = Optional.ofNullable(wptType.getTime())
+                .flatMap((xmlGC) -> Optional.of(xmlGC.toGregorianCalendar().toZonedDateTime())).orElse(
+                        null);
+
+        String name = Optional.ofNullable(wptType.getName()).orElse("");
+        return new WayPoint(latitude, longitude, elevation, timestamp, name);
     }
 
     /**
