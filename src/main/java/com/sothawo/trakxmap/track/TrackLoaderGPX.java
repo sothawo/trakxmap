@@ -17,7 +17,6 @@ package com.sothawo.trakxmap.track;
 
 import com.sothawo.trakxmap.generated.gpx.GpxType;
 import com.sothawo.trakxmap.generated.gpx.MetadataType;
-import com.sothawo.trakxmap.generated.gpx.TrkType;
 import com.sothawo.trakxmap.util.I18N;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +26,13 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * TrackLoader to load data from a GPX track file. If the gpx file contains more than one track, they are
- * concatenated to one.
+ * TrackLoader to load data from a GPX track file. If the gpx file contains more than one track, they are concatenated
+ * to one.
  *
  * @author P.J. Meisch (pj.meisch@sothawo.com).
  */
@@ -86,34 +86,39 @@ public class TrackLoaderGPX implements TrackLoader {
      */
     private Track getTrack(String filename, GpxType gpxType) {
         Track track = new Track();
-        String defaultName = track.getName();
 
         Optional<MetadataType> optionalMeta = Optional.ofNullable(gpxType.getMetadata());
+
         // use info from metadata
-        optionalMeta.ifPresent((metadata) -> Optional.ofNullable(metadata.getName()).ifPresent(track::setName));
+        String metadataName = optionalMeta.flatMap((metadata) -> Optional.ofNullable(metadata.getName())).orElse("");
 
         // process the tracks
-        Optional.ofNullable(gpxType.getTrk()).ifPresent((trks) -> trks.forEach((trk) -> addTrkTypeToTrack(trk, track)));
+        final List<String> trackNames = new ArrayList<>();
+        Optional.ofNullable(gpxType.getTrk()).ifPresent((trks) -> trks.forEach((trk) -> {
+            Optional.ofNullable(trk.getName()).ifPresent(trackNames::add);
+            // do other stuff with track
+        }));
 
-        // if no name was set in the track data, use the filename
-        if (defaultName.equals(track.getName())) {
-            track.setName(filename);
-        }
+        track.setName(buildTrackName(metadataName, trackNames, filename));
+
         return track;
     }
 
     /**
-     * adds the data from the gpx track to the track object
+     * creates the name for the track from the name elements found in the gpx data
      *
-     * @param trkType
-     * @param track
+     * @param metadataName
+     *         name from metadata section
+     * @param trackNames
+     *         names from tracks
+     * @param filename
+     *         to be used as default when no name elements are found
+     * @return name for Track Object
      */
-    private void addTrkTypeToTrack(TrkType trkType, Track track) {
-        StringBuilder sb = new StringBuilder(track.getName());
-        Optional.ofNullable(trkType.getName()).ifPresent((name) -> {
-            sb.append('/');
-            sb.append(name);
-        });
-        track.setName(sb.toString());
+    private String buildTrackName(String metadataName, List<String> trackNames, String filename) {
+        String nameFromTracks = String.join("/", trackNames);
+        String name = metadataName.isEmpty() ? nameFromTracks :
+                (metadataName.equals(nameFromTracks) ? metadataName : metadataName + '(' + nameFromTracks + ')');
+        return name.isEmpty() ? filename : name;
     }
 }

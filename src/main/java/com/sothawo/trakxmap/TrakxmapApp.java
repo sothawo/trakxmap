@@ -101,7 +101,7 @@ public class TrakxmapApp extends Application {
         super.init();
         initLanguage();
         trackLoaders.add(new TrackLoaderGPX());
-        trackLoaders.add(new TrackLoaderFail());
+//        trackLoaders.add(new TrackLoaderFail());
     }
 
     /**
@@ -111,6 +111,7 @@ public class TrakxmapApp extends Application {
      *         file names
      */
     private void loadTrackFiles(List<File> files) {
+        List<String> failedFilenames = new ArrayList<>();
         files.forEach((file) -> {
             logger.info(I18N.get(I18N.LOG_LOADING_TRACK, file.toString()));
             Optional<Track> track = Optional.empty();
@@ -119,8 +120,14 @@ public class TrakxmapApp extends Application {
                 track = trackLoaderIterator.next().load(file);
             }
             track.ifPresent(trackList::add);
+            if (!track.isPresent()) {
+                failedFilenames.add(file.getName());
+            }
         });
-        // TODO: show info about the failed files
+        // TODO: show info about the failed files in dialog
+        if (!failedFilenames.isEmpty()) {
+            logger.warn("could not load all files");
+        }
     }
 
     @Override
