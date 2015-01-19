@@ -27,10 +27,8 @@ import java.time.ZonedDateTime;
 public final class WayPoint {
 // ------------------------------ FIELDS ------------------------------
 
-    /** latitude */
-    private final Double latitude;
-    /** longitude */
-    private final Double longitude;
+    /** coordinate for lat/lon */
+    private final Coordinate coordinate;
     /** elevation */
     private final Double elevation;
     /** timestamp */
@@ -42,11 +40,28 @@ public final class WayPoint {
 // --------------------------- CONSTRUCTORS ---------------------------
 
     public WayPoint(Double latitude, Double longitude, Double elevation, ZonedDateTime timestamp, String name) {
-        this.latitude = latitude;
-        this.longitude = longitude;
+        this.coordinate = new Coordinate(latitude, longitude);
         this.elevation = elevation;
         this.timestamp = timestamp;
         this.name = name;
+    }
+
+// --------------------- GETTER / SETTER METHODS ---------------------
+
+    public Coordinate getCoordinate() {
+        return coordinate;
+    }
+
+    public Double getElevation() {
+        return elevation;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public ZonedDateTime getTimestamp() {
+        return timestamp;
     }
 
 // ------------------------ CANONICAL METHODS ------------------------
@@ -58,9 +73,8 @@ public final class WayPoint {
 
         WayPoint wayPoint = (WayPoint) o;
 
+        if (coordinate != null ? !coordinate.equals(wayPoint.coordinate) : wayPoint.coordinate != null) return false;
         if (elevation != null ? !elevation.equals(wayPoint.elevation) : wayPoint.elevation != null) return false;
-        if (latitude != null ? !latitude.equals(wayPoint.latitude) : wayPoint.latitude != null) return false;
-        if (longitude != null ? !longitude.equals(wayPoint.longitude) : wayPoint.longitude != null) return false;
         if (name != null ? !name.equals(wayPoint.name) : wayPoint.name != null) return false;
         if (timestamp != null ? !timestamp.equals(wayPoint.timestamp) : wayPoint.timestamp != null) return false;
 
@@ -69,8 +83,7 @@ public final class WayPoint {
 
     @Override
     public int hashCode() {
-        int result = latitude != null ? latitude.hashCode() : 0;
-        result = 31 * result + (longitude != null ? longitude.hashCode() : 0);
+        int result = coordinate != null ? coordinate.hashCode() : 0;
         result = 31 * result + (elevation != null ? elevation.hashCode() : 0);
         result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
@@ -80,22 +93,10 @@ public final class WayPoint {
     @Override
     public String toString() {
         return "WayPoint{" +
-                "latitude=" + latitude +
-                ", longitude=" + longitude +
+                "coordinate=" + coordinate +
                 ", elevation=" + elevation +
                 ", timestamp=" + timestamp +
                 ", name='" + name + '\'' +
                 '}';
-    }
-
-// -------------------------- OTHER METHODS --------------------------
-
-    /**
-     * returns the lat/lon coordinate for this waypoint
-     *
-     * @return Coordinate
-     */
-    public Coordinate toCoordinate() {
-        return new Coordinate(latitude, longitude);
     }
 }

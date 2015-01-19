@@ -15,11 +15,13 @@
 */
 package com.sothawo.trakxmap.track;
 
+import com.sothawo.mapjfx.Extent;
 import com.sothawo.trakxmap.util.I18N;
 import javafx.beans.property.SimpleStringProperty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A track that can be displayed on the map with additional data.
@@ -35,22 +37,12 @@ public class Track {
     private final List<WayPoint> wayPoints = new ArrayList<>();
     /** the trackpooints of the track */
     private final List<WayPoint> trackPoints = new ArrayList<>();
+    /** the extent of the track */
+    private Extent extent = null;
 
-    public List<WayPoint> getTrackPoints() {
-        return trackPoints;
-    }
-    // --------------------------- CONSTRUCTORS ---------------------------
+// --------------------------- CONSTRUCTORS ---------------------------
 
     public Track() {
-    }
-
-    @Override
-    public String toString() {
-        return "Track{" +
-                "name=" + name +
-                ", wayPoints=" + wayPoints +
-                ", #trackPoints=" + trackPoints.size() +
-                '}';
     }
 
     public Track(String name) {
@@ -59,20 +51,60 @@ public class Track {
 
 // --------------------- GETTER / SETTER METHODS ---------------------
 
+    /**
+     * gets the extent for the contined trackpoints. If the list of trackpoints is changed after the extent is
+     * calculated, the new extent must be calculated by calling recalculateExtent().
+     *
+     * @return the extent
+     */
+    public Extent getExtent() {
+        // extent can only be calculated when more than 2 points are available
+        if (null == extent && trackPoints.size() >= 2) {
+            extent = Extent.forCoordinates(
+                    trackPoints.stream().map(WayPoint::getCoordinate).collect(Collectors.toList()));
+        }
+        return extent;
+    }
+
+    public List<WayPoint> getTrackPoints() {
+        return trackPoints;
+    }
+
     public List<WayPoint> getWayPoints() {
         return wayPoints;
     }
 
 // ------------------------ CANONICAL METHODS ------------------------
 
-    public String getName() {
-        return name.get();
+    @Override
+    public String toString() {
+        return "Track{" +
+                "name=" + name +
+                ", wayPoints=" + wayPoints +
+                ", #trackPoints=" + trackPoints.size() +
+                ", extent=" + getExtent().toString() +
+                '}';
     }
 
 // -------------------------- OTHER METHODS --------------------------
 
+    public String getName() {
+        return name.get();
+    }
+
     public SimpleStringProperty nameProperty() {
         return name;
+    }
+
+    /**
+     * recalculates the etxent. This is necessary if the trackpoint list was modified after the last call to
+     * getExtent();
+     *
+     * @return the extent
+     */
+    public Extent recalculateExtent() {
+        extent = null;
+        return getExtent();
     }
 
     public void setName(String name) {

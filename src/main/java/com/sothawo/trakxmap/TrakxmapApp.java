@@ -20,7 +20,6 @@ import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.track.Track;
 import com.sothawo.trakxmap.track.TrackLoader;
-import com.sothawo.trakxmap.track.TrackLoaderFail;
 import com.sothawo.trakxmap.track.TrackLoaderGPX;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PreferencesBindings;
@@ -48,8 +47,6 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
 
 /**
  * Trakxmap application class.
@@ -329,6 +326,12 @@ public class TrakxmapApp extends Application {
 
         ListView<Track> trackListView = new ListView<>(trackList);
         trackListView.setCellFactory((listView -> new TrackListCell()));
+        trackListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+        trackListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            Optional.ofNullable(newValue)
+                    .ifPresent((track) -> Optional.ofNullable(track.getExtent()).ifPresent(mapView::setExtent));
+        });
 
         AnchorPane anchorPane = new AnchorPane(trackListView);
         anchorPane.setId("track-list-anchorpane");
