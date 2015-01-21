@@ -353,6 +353,7 @@ public class TrakxmapApp extends Application {
         mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 logger.trace(I18N.get(I18N.LOG_MAP_INITIALIZED));
+                mapView.setAnimationDuration(1000);
                 // show Europe
                 mapView.setCenter(new Coordinate(46.67959446564012, 5.537109374999998));
                 mapView.setZoom(5);

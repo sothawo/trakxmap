@@ -18,6 +18,7 @@ package com.sothawo.trakxmap.track;
 import com.sothawo.mapjfx.Coordinate;
 
 import java.time.ZonedDateTime;
+import java.util.Objects;
 
 /**
  * Point in track. Used for track points and way points.
@@ -27,30 +28,29 @@ import java.time.ZonedDateTime;
 public final class WayPoint {
 // ------------------------------ FIELDS ------------------------------
 
-    /** coordinate for lat/lon */
-    private final Coordinate coordinate;
+    /** latitude */
+    private final Double latitude;
+    /** longitude */
+    private final Double longitude;
     /** elevation */
     private final Double elevation;
     /** timestamp */
     private final ZonedDateTime timestamp;
-
     /** name */
     private final String name;
 
 // --------------------------- CONSTRUCTORS ---------------------------
 
     public WayPoint(Double latitude, Double longitude, Double elevation, ZonedDateTime timestamp, String name) {
-        this.coordinate = new Coordinate(latitude, longitude);
+        this.latitude = Objects.requireNonNull(latitude);
+        this.longitude = Objects.requireNonNull(longitude);
+
         this.elevation = elevation;
         this.timestamp = timestamp;
         this.name = name;
     }
 
 // --------------------- GETTER / SETTER METHODS ---------------------
-
-    public Coordinate getCoordinate() {
-        return coordinate;
-    }
 
     public Double getElevation() {
         return elevation;
@@ -73,8 +73,9 @@ public final class WayPoint {
 
         WayPoint wayPoint = (WayPoint) o;
 
-        if (coordinate != null ? !coordinate.equals(wayPoint.coordinate) : wayPoint.coordinate != null) return false;
         if (elevation != null ? !elevation.equals(wayPoint.elevation) : wayPoint.elevation != null) return false;
+        if (latitude != null ? !latitude.equals(wayPoint.latitude) : wayPoint.latitude != null) return false;
+        if (longitude != null ? !longitude.equals(wayPoint.longitude) : wayPoint.longitude != null) return false;
         if (name != null ? !name.equals(wayPoint.name) : wayPoint.name != null) return false;
         if (timestamp != null ? !timestamp.equals(wayPoint.timestamp) : wayPoint.timestamp != null) return false;
 
@@ -83,7 +84,8 @@ public final class WayPoint {
 
     @Override
     public int hashCode() {
-        int result = coordinate != null ? coordinate.hashCode() : 0;
+        int result = latitude != null ? latitude.hashCode() : 0;
+        result = 31 * result + (longitude != null ? longitude.hashCode() : 0);
         result = 31 * result + (elevation != null ? elevation.hashCode() : 0);
         result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
@@ -93,10 +95,22 @@ public final class WayPoint {
     @Override
     public String toString() {
         return "WayPoint{" +
-                "coordinate=" + coordinate +
+                "latitude=" + latitude +
+                ", longitude=" + longitude +
                 ", elevation=" + elevation +
                 ", timestamp=" + timestamp +
                 ", name='" + name + '\'' +
                 '}';
+    }
+
+// -------------------------- OTHER METHODS --------------------------
+
+    /**
+     * gets lat/lon as coordinate object
+     * @return coordinate
+     */
+    public Coordinate getCoordinate() {
+        return new Coordinate(latitude, longitude
+        );
     }
 }
