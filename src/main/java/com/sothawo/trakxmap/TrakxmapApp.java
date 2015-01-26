@@ -16,6 +16,7 @@
 package com.sothawo.trakxmap;
 
 import com.sothawo.mapjfx.Coordinate;
+import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.track.Track;
@@ -329,8 +330,7 @@ public class TrakxmapApp extends Application {
         trackListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
         trackListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            Optional.ofNullable(newValue)
-                    .ifPresent((track) -> Optional.ofNullable(track.getExtent()).ifPresent(mapView::setExtent));
+            trackSelectionChanged(oldValue, newValue);
         });
 
         AnchorPane anchorPane = new AnchorPane(trackListView);
@@ -343,6 +343,24 @@ public class TrakxmapApp extends Application {
 
         titledPane.setContent(anchorPane);
         return titledPane;
+    }
+
+    /**
+     * hides the old track from the map, show the new track and zooms to the new track's extent
+     * @param oldTrack the old track if any
+     * @param newTrack the new track
+     */
+    private void trackSelectionChanged(Track oldTrack, Track newTrack) {
+        if (null != oldTrack) {
+            mapView.removeCoordinateLine(oldTrack.getCoordinateLine());
+        }
+        if (null != newTrack) {
+            CoordinateLine coordinateLine = newTrack.getCoordinateLine();
+            mapView.addCoordinateLine(coordinateLine);
+            coordinateLine.setVisible(true);
+            mapView.setExtent(newTrack.getExtent());
+        }
+
     }
 
     /**

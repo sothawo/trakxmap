@@ -15,9 +15,11 @@
 */
 package com.sothawo.trakxmap.track;
 
+import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.Extent;
 import com.sothawo.trakxmap.util.I18N;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +42,9 @@ public class Track {
     /** the extent of the track */
     private Extent extent = null;
 
+    /** CoordinateLine representig this track */
+    private CoordinateLine coordinateLine = null;
+
 // --------------------------- CONSTRUCTORS ---------------------------
 
     public Track() {
@@ -50,6 +55,15 @@ public class Track {
     }
 
 // --------------------- GETTER / SETTER METHODS ---------------------
+
+    public CoordinateLine getCoordinateLine() {
+        if (null == coordinateLine) {
+            coordinateLine =
+                    new CoordinateLine(trackPoints.stream().map(WayPoint::getCoordinate).collect(Collectors.toList())
+                    ).setColor(Color.RED).setWidth(5);
+        }
+        return coordinateLine;
+    }
 
     /**
      * gets the extent for the contined trackpoints. If the list of trackpoints is changed after the extent is
