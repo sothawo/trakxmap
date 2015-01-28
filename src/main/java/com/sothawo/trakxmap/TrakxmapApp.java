@@ -86,6 +86,7 @@ public class TrakxmapApp extends Application {
 
 // -------------------------- STATIC METHODS --------------------------
 
+    // initialize logging and install Bridge from JUL to SLF4J
     static {
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
