@@ -56,6 +56,7 @@ public class I18N {
     public static final String TOOLTIP_SWITCH_LOCALE = "tooltip.switch.locale";
     public static final String TRACK_NAME_DEFAULT = "track.name.default";
     public static final String ERROR_LOADING_TRACK = "error.loading.track";
+    public static final String ERROR_NO_TRACKLOADER_FOR_FILE = "error.no.trackloader.for.file";
 
     private static final Logger logger = LoggerFactory.getLogger(I18N.class);
     private static final ObjectProperty<Locale> locale;

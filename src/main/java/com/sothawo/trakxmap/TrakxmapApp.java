@@ -31,6 +31,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -48,6 +49,10 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 /**
  * Trakxmap application class.
@@ -84,6 +89,10 @@ public class TrakxmapApp extends Application {
     /** List with the available TrackLoaders in the order thy are used to load a file */
     private final List<TrackLoader> trackLoaders = new ArrayList<>();
 
+    /** threadpool for work to be done in the background */
+    private ExecutorService threadPool;
+
+
 // -------------------------- STATIC METHODS --------------------------
 
     // initialize logging and install Bridge from JUL to SLF4J
@@ -101,6 +110,15 @@ public class TrakxmapApp extends Application {
         initLanguage();
         trackLoaders.add(new TrackLoaderGPX());
 //        trackLoaders.add(new TrackLoaderFail());
+
+        // create a thread pool for background tasks with a custom thread factory
+        final AtomicInteger threadId = new AtomicInteger(1);
+        threadPool = Executors.newCachedThreadPool(runnable -> {
+            Thread thread = new Thread(runnable);
+            thread.setName("trakxmap-threadpool-" + threadId.getAndIncrement());
+            thread.setDaemon(true);
+            return thread;
+        });
     }
 
     /**
@@ -110,23 +128,35 @@ public class TrakxmapApp extends Application {
      *         file names
      */
     private void loadTrackFiles(List<File> files) {
-        List<String> failedFilenames = new ArrayList<>();
-        files.forEach((file) -> {
-            logger.info(I18N.get(I18N.LOG_LOADING_TRACK, file.toString()));
-            Optional<Track> track = Optional.empty();
-            Iterator<TrackLoader> trackLoaderIterator = trackLoaders.iterator();
-            while (!track.isPresent() && trackLoaderIterator.hasNext()) {
-                track = trackLoaderIterator.next().load(file);
-            }
-            track.ifPresent(trackList::add);
-            if (!track.isPresent()) {
-                failedFilenames.add(file.getName());
-            }
-        });
-        // TODO: show info about the failed files in dialog
-        if (!failedFilenames.isEmpty()) {
-            logger.warn("could not load all files");
+        if (null == files || 0 == files.size()) {
+            return;
         }
+        files.forEach((file) -> {
+            //create a task that contains the loaded track if successful
+            Task<Optional<Track>> task = new Task<Optional<Track>>() {
+                @Override
+                protected Optional<Track> call() throws Exception {
+                    logger.info(I18N.get(I18N.LOG_LOADING_TRACK, file.toString()));
+                    Optional<Track> track = Optional.empty();
+                    Iterator<TrackLoader> trackLoaderIterator = trackLoaders.iterator();
+                    while (!track.isPresent() && trackLoaderIterator.hasNext()) {
+                        track = trackLoaderIterator.next().load(file);
+                    }
+                    if (!track.isPresent()) {
+                        logger.warn(I18N.get(I18N.ERROR_NO_TRACKLOADER_FOR_FILE, file.toString()));
+                    }
+                    return track;
+                }
+            };
+            // wait for the task to send back the value by observing the valueProperty  and put it in the tracklist
+            task.valueProperty().addListener((observable, oldValue, newValue) -> {
+                if (null != newValue) {
+                    newValue.ifPresent(trackList::add);
+                }
+            });
+            //Send the task to the threadpool
+            threadPool.submit(task);
+        });
     }
 
     @Override
@@ -348,8 +378,11 @@ public class TrakxmapApp extends Application {
 
     /**
      * hides the old track from the map, show the new track and zooms to the new track's extent
-     * @param oldTrack the old track if any
-     * @param newTrack the new track
+     *
+     * @param oldTrack
+     *         the old track if any
+     * @param newTrack
+     *         the new track
      */
     private void trackSelectionChanged(Track oldTrack, Track newTrack) {
         if (null != oldTrack) {
