@@ -38,8 +38,16 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ## version history
 
+### 0.2.0.
+
+* drag gpx-files into the application to load the track data or select via filechooser
+* the selected track is shown in the map
+
+### 0.1.0
+
+* basic layout
+
 ### 0.0.1-SNAPSHOT
 
-current development version
 * intial version, nothing but a window with some text
 
