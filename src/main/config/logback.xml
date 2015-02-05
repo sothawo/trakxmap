@@ -11,6 +11,7 @@
     </appender>
 
     <logger name="com.sothawo" level="debug" />
+    <logger name="liquibase" level="info" />
 
     <!--  setting this to more than INFO crashes the JVM -->
     <logger name="com.sun.javafx.webkit.prism" level = "info" />
