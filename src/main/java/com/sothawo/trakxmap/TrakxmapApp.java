@@ -30,6 +30,7 @@ import com.sothawo.trakxmap.util.PreferencesBindings;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -88,7 +89,7 @@ public class TrakxmapApp extends Application {
     private MapView mapView;
 
     /** the list containing the Tracks */
-    private ObservableList<Track> trackList = FXCollections.observableArrayList();
+    private final ObservableList<Track> trackList = FXCollections.observableArrayList();
 
     /** List with the available TrackLoaders in the order thy are used to load a file */
     private final List<TrackLoader> trackLoaders = new ArrayList<>();
@@ -219,8 +220,8 @@ public class TrakxmapApp extends Application {
     }
 
     /**
-     * initializes the databse by firing off the update in a different threads and creating th DB object when the update
-     * is finished.
+     * initializes the database by firing off the update in a different thread and creating th DB object when the
+     * update is finished. After that the stores Tracks are loaded.
      */
     private void initializeDatabase() {
         // fire off the db update
@@ -230,6 +231,8 @@ public class TrakxmapApp extends Application {
                 Optional<Failure> failure = dbUpdateTask.getValue();
                 if (!failure.isPresent()) {
                     db = Optional.of(new DB());
+                    List<Track> tracks = db.get().getTracks();
+                    Platform.runLater(() -> trackList.addAll(tracks));
                 }
                 dbUpdateFinished.set(true);
             } else if (newValue.equals(Worker.State.FAILED)) {

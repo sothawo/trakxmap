@@ -16,15 +16,13 @@
 package com.sothawo.trakxmap.db;
 
 import com.sothawo.trakxmap.util.Failure;
+import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PathTools;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
+import javax.persistence.*;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceProviderResolver;
 import javax.persistence.spi.PersistenceProviderResolverHolder;
@@ -86,6 +84,26 @@ public class DB implements AutoCloseable {
         emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, props);
     }
 
+// --------------------- GETTER / SETTER METHODS ---------------------
+
+    /**
+     * loads the tracks from the database
+     *
+     * @return List of track, may be emtpy but not null
+     */
+    public List<Track> getTracks() {
+        List<Track> tracks = new ArrayList<>();
+        try {
+            EntityManager em = emf.createEntityManager();
+            List<Track> resultList = em.createQuery("select t from Track t", Track.class).getResultList();
+            tracks.addAll(resultList);
+            em.close();
+        } catch (IllegalStateException | IllegalArgumentException | PersistenceException e) {
+            logger.error(I18N.get(I18N.ERROR_LOADING_TRACK), e);
+        }
+        return tracks;
+    }
+
 // ------------------------ INTERFACE METHODS ------------------------
 
 
@@ -101,6 +119,8 @@ public class DB implements AutoCloseable {
             logger.warn("DB", e);
         }
     }
+
+// -------------------------- OTHER METHODS --------------------------
 
     /**
      * stores a track in the database
