@@ -49,14 +49,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.typesafe</groupId>
-            <artifactId>config</artifactId>
-            <version>1.2.1</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- Logging -->
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.9</version>
@@ -73,10 +65,9 @@
             <artifactId>logback-classic</artifactId>
             <version>1.1.2</version>
         </dependency>
-        <!-- get liquibase to slf4j logging, compile, so that it's on the classpath when running from IDE-->
         <dependency>
-            <groupId>com.mattbertolini</groupId>
-            <artifactId>liquibase-slf4j</artifactId>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
             <version>1.2.1</version>
             <scope>compile</scope>
         </dependency>
@@ -190,7 +181,7 @@
                     <programs>
                         <program>
                             <id>trakxmap</id>
-                            <mainClass>com.sothawo.trakxmap.TrakxmapApp</mainClass>
+                            <mainClass>com.sothawo.trakxmap.util.TrakxmapApp</mainClass>
                         </program>
                     </programs>
                 </configuration>

@@ -23,7 +23,6 @@ import com.sothawo.trakxmap.track.Track;
 import com.sothawo.trakxmap.track.TrackLoader;
 import com.sothawo.trakxmap.track.TrackLoaderGPX;
 import com.sothawo.trakxmap.util.I18N;
-import com.sothawo.trakxmap.util.PathTools;
 import com.sothawo.trakxmap.util.PreferencesBindings;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -44,23 +43,16 @@ import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import liquibase.Contexts;
-import liquibase.Liquibase;
-import liquibase.database.DatabaseConnection;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.LiquibaseException;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 /**
  * Trakxmap application class.
@@ -100,6 +92,7 @@ public class TrakxmapApp extends Application {
     /** threadpool for work to be done in the background */
     private ExecutorService threadPool;
 
+
 // -------------------------- STATIC METHODS --------------------------
 
     // initialize logging and install Bridge from JUL to SLF4J
@@ -126,34 +119,6 @@ public class TrakxmapApp extends Application {
             thread.setDaemon(true);
             return thread;
         });
-
-        updateDatabase();
-    }
-
-    /**
-     * initialize language settings
-     */
-    private void initLanguage() {
-        // normally the bindBidirectional should be called on the object that should be set with the initial value
-        // from the other property. This is not possible here, as we need the mapping between Locale and String and
-        // therefore must call bindBidirectional on the StringProperty. So we store the value from the prefs and set
-        // it after the binding
-        SimpleStringProperty prop =
-                prefs.simpleStringPropertyFor(PREF_LANGUAGE, I18N.getDefaultLocale().toLanguageTag());
-
-        String lang = prop.getValue();
-        prop.bindBidirectional(I18N.localeProperty(), new StringConverter<Locale>() {
-            @Override
-            public String toString(Locale object) {
-                return object.toLanguageTag();
-            }
-
-            @Override
-            public Locale fromString(String string) {
-                return Locale.forLanguageTag(string);
-            }
-        });
-        prop.setValue(lang);
     }
 
     /**
@@ -207,6 +172,32 @@ public class TrakxmapApp extends Application {
         primaryStage.show();
 
         logger.trace(I18N.get(I18N.LOG_START_PROGRAM_FINISHED));
+    }
+
+    /**
+     * initialize language settings
+     */
+    private void initLanguage() {
+        // normally the bindBidirectional should be called on the object that should be set with the initial value
+        // from the other property. This is not possible here, as we need the mapping between Locale and String and
+        // therefore must call bindBidirectional on the StringProperty. So we store the value from the prefs and set
+        // it after the binding
+        SimpleStringProperty prop =
+                prefs.simpleStringPropertyFor(PREF_LANGUAGE, I18N.getDefaultLocale().toLanguageTag());
+
+        String lang = prop.getValue();
+        prop.bindBidirectional(I18N.localeProperty(), new StringConverter<Locale>() {
+            @Override
+            public String toString(Locale object) {
+                return object.toLanguageTag();
+            }
+
+            @Override
+            public Locale fromString(String string) {
+                return Locale.forLanguageTag(string);
+            }
+        });
+        prop.setValue(lang);
     }
 
     /**
@@ -269,7 +260,7 @@ public class TrakxmapApp extends Application {
         widthProperty.bind(scene.widthProperty());
         heightProperty.bind(scene.heightProperty());
 
-        scene.getStylesheets().add("/css/trakxmap.css");
+        scene.getStylesheets().add("/trakxmap.css");
 
         return scene;
     }
@@ -403,6 +394,7 @@ public class TrakxmapApp extends Application {
             coordinateLine.setVisible(true);
             mapView.setExtent(newTrack.getExtent());
         }
+
     }
 
     /**
@@ -420,22 +412,6 @@ public class TrakxmapApp extends Application {
             }
         });
         mapView.initialize();
-    }
-
-    /**
-     * updates the database, if necessary.
-     */
-    private boolean updateDatabase() {
-        logger.info(I18N.get(I18N.LOG_DB_UPDATE_NECESSARY));
-        try {
-            DatabaseConnection dbConnection = new JdbcConnection(DriverManager.getConnection(PathTools.getJdbcUrl()));
-            Liquibase liquibase = new Liquibase("db/db-changelog.xml", new ClassLoaderResourceAccessor(), dbConnection);
-            liquibase.update(new Contexts());
-            return true;
-        } catch (SQLException | LiquibaseException e) {
-            logger.error(I18N.get(I18N.LOG_DB_UPDATE_ERROR), e);
-        }
-        return false;
     }
 
 // --------------------------- main() method ---------------------------
