@@ -15,6 +15,11 @@
 */
 package com.sothawo.trakxmap.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 /**
@@ -33,6 +38,9 @@ public final class PathTools {
     private static final String DATAPATH_MAC = "/Library/Application Support";
     private static final String DATAPATH_NIX = "/.local/share";
 
+    /** Logger for the class */
+    private static final Logger logger = LoggerFactory.getLogger(PathTools.class);
+
 // -------------------------- STATIC METHODS --------------------------
 
     /**
@@ -44,6 +52,28 @@ public final class PathTools {
         String os = System.getProperty(SYSPROP_OS_NAME).toLowerCase();
         return Optional.ofNullable(os.contains(OS_WIN) ? System.getenv(ENV_WIN_APPDATA) :
                 System.getProperty(SYSPROP_USER_HOME) + (os.contains(OS_MAC) ? DATAPATH_MAC : DATAPATH_NIX));
+    }
+
+    /**
+     * gets the JDBC URL for the database.
+     *
+     * @return JDBC URL
+     */
+    public static String getJdbcUrl() {
+        String jdbcUrl = "jdbc:h2:" + getDatabaseDirectory().toString() + "/trakxmap-db";
+        logger.debug("jdbc url: {}", jdbcUrl);
+        return jdbcUrl;
+    }
+
+    /**
+     * getst the directory to crate the database in.
+     *
+     * @return directory Path
+     */
+    public static Path getDatabaseDirectory() {
+        String dir = getApplicationDataDirectory().orElse(".") + "/trakxmap/database";
+        logger.debug("database directory: {}", dir);
+        return Paths.get(dir);
     }
 
 // --------------------------- CONSTRUCTORS ---------------------------
