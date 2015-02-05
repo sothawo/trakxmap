@@ -21,7 +21,7 @@ import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.db.DB;
 import com.sothawo.trakxmap.db.DatabaseUpdateTask;
-import com.sothawo.trakxmap.track.Track;
+import com.sothawo.trakxmap.db.Track;
 import com.sothawo.trakxmap.track.TrackLoader;
 import com.sothawo.trakxmap.track.TrackLoaderGPX;
 import com.sothawo.trakxmap.util.Failure;

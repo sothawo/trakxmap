@@ -13,10 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package com.sothawo.trakxmap.track;
+package com.sothawo.trakxmap.db;
 
 import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.Extent;
+import com.sothawo.trakxmap.track.WayPoint;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PathTools;
 import javafx.beans.property.SimpleStringProperty;

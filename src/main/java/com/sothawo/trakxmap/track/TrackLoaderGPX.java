@@ -15,6 +15,7 @@
 */
 package com.sothawo.trakxmap.track;
 
+import com.sothawo.trakxmap.db.Track;
 import com.sothawo.trakxmap.generated.gpx.GpxType;
 import com.sothawo.trakxmap.generated.gpx.MetadataType;
 import com.sothawo.trakxmap.generated.gpx.WptType;

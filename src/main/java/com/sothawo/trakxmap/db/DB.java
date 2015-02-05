@@ -15,7 +15,6 @@
 */
 package com.sothawo.trakxmap.db;
 
-import com.sothawo.trakxmap.track.Track;
 import com.sothawo.trakxmap.util.Failure;
 import com.sothawo.trakxmap.util.PathTools;
 import org.hibernate.jpa.HibernatePersistenceProvider;

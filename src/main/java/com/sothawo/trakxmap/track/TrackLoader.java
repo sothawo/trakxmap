@@ -15,6 +15,8 @@
 */
 package com.sothawo.trakxmap.track;
 
+import com.sothawo.trakxmap.db.Track;
+
 import java.io.File;
 import java.util.Optional;
 

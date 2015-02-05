@@ -15,7 +15,7 @@
 */
 package com.sothawo.trakxmap.control;
 
-import com.sothawo.trakxmap.track.Track;
+import com.sothawo.trakxmap.db.Track;
 import javafx.scene.control.ListCell;
 
 /**
