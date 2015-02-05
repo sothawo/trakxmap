@@ -17,15 +17,15 @@ package com.sothawo.trakxmap.track;
 
 import com.sothawo.mapjfx.Coordinate;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
- * Point in track. Used for track points and way points.
+ * TrackPoint in track.
  *
  * @author P.J. Meisch (pj.meisch@sothawo.com).
  */
-public final class WayPoint {
+public final class TrackPoint {
 // ------------------------------ FIELDS ------------------------------
 
     /** latitude */
@@ -35,19 +35,16 @@ public final class WayPoint {
     /** elevation */
     private final Double elevation;
     /** timestamp */
-    private final ZonedDateTime timestamp;
-    /** name */
-    private final String name;
+    private final LocalDateTime timestamp;
 
 // --------------------------- CONSTRUCTORS ---------------------------
 
-    public WayPoint(Double latitude, Double longitude, Double elevation, ZonedDateTime timestamp, String name) {
+    public TrackPoint(Double latitude, Double longitude, Double elevation, LocalDateTime timestamp) {
         this.latitude = Objects.requireNonNull(latitude);
         this.longitude = Objects.requireNonNull(longitude);
 
         this.elevation = elevation;
         this.timestamp = timestamp;
-        this.name = name;
     }
 
 // --------------------- GETTER / SETTER METHODS ---------------------
@@ -56,11 +53,7 @@ public final class WayPoint {
         return elevation;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public ZonedDateTime getTimestamp() {
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
@@ -71,12 +64,11 @@ public final class WayPoint {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        WayPoint wayPoint = (WayPoint) o;
+        TrackPoint wayPoint = (TrackPoint) o;
 
         if (elevation != null ? !elevation.equals(wayPoint.elevation) : wayPoint.elevation != null) return false;
         if (latitude != null ? !latitude.equals(wayPoint.latitude) : wayPoint.latitude != null) return false;
         if (longitude != null ? !longitude.equals(wayPoint.longitude) : wayPoint.longitude != null) return false;
-        if (name != null ? !name.equals(wayPoint.name) : wayPoint.name != null) return false;
         if (timestamp != null ? !timestamp.equals(wayPoint.timestamp) : wayPoint.timestamp != null) return false;
 
         return true;
@@ -88,18 +80,16 @@ public final class WayPoint {
         result = 31 * result + (longitude != null ? longitude.hashCode() : 0);
         result = 31 * result + (elevation != null ? elevation.hashCode() : 0);
         result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
-        result = 31 * result + (name != null ? name.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "WayPoint{" +
+        return "TrackPoint{" +
                 "latitude=" + latitude +
                 ", longitude=" + longitude +
                 ", elevation=" + elevation +
                 ", timestamp=" + timestamp +
-                ", name='" + name + '\'' +
                 '}';
     }
 
@@ -110,7 +100,6 @@ public final class WayPoint {
      * @return coordinate
      */
     public Coordinate getCoordinate() {
-        return new Coordinate(latitude, longitude
-        );
+        return new Coordinate(latitude, longitude);
     }
 }

@@ -7,12 +7,15 @@
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="1" author="pj.meisch@sothawo.com">
-        <comment>create TRACK table with id and name</comment>
+        <comment>create TRACK table</comment>
         <createTable tableName="TRACK">
             <column name="ID" type="long">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="NAME" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="FILENAME" type="varchar(255)">
                 <constraints nullable="true"/>
             </column>
         </createTable>
@@ -21,11 +24,38 @@
     </changeSet>
 
     <changeSet id="2" author="pj.meisch@sothawo.com">
-        <comment>add FILENAME column to TRACK table</comment>
-        <addColumn tableName="TRACK">
-            <column name="FILENAME" type="varchar(255)">
+        <comment>create WAYPOINT table</comment>
+        <createTable tableName="WAYPOINT">
+            <column name="ID" type="long">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="SEQUENCE" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NAME" type="varchar(255)">
                 <constraints nullable="true"/>
             </column>
-        </addColumn>
+            <column name="LATITUDE" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LONGITUDE" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ELEVATION" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TIMESTAMP" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+            <column name="TRACK_ID" type="long">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- id column is identity -->
+        <addAutoIncrement tableName="WAYPOINT" columnName="ID" columnDataType="long" startWith="100" incrementBy="1"/>
+        <!-- TRACK_ID is FK into TRACK table -->
+        <addForeignKeyConstraint baseTableName="WAYPOINT" baseColumnNames="TRACK_ID"
+                                 constraintName="FK_WAYPOINT_TRACK"
+                                 referencedTableName="TRACK" referencedColumnNames="ID"/>
     </changeSet>
 </databaseChangeLog>

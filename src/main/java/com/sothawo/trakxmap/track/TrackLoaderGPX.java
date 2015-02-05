@@ -16,6 +16,7 @@
 package com.sothawo.trakxmap.track;
 
 import com.sothawo.trakxmap.db.Track;
+import com.sothawo.trakxmap.db.WayPoint;
 import com.sothawo.trakxmap.generated.gpx.GpxType;
 import com.sothawo.trakxmap.generated.gpx.MetadataType;
 import com.sothawo.trakxmap.generated.gpx.WptType;
@@ -29,7 +30,7 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -90,12 +91,31 @@ public class TrackLoaderGPX implements TrackLoader {
         Double longitude = Optional.ofNullable(wptType.getLon()).orElse(BigDecimal.ZERO).doubleValue();
         Double elevation = Optional.ofNullable(wptType.getEle()).orElse(BigDecimal.ZERO).doubleValue();
 
-        ZonedDateTime timestamp = Optional.ofNullable(wptType.getTime())
-                .flatMap((xmlGC) -> Optional.of(xmlGC.toGregorianCalendar().toZonedDateTime())).orElse(
-                        null);
+        LocalDateTime timestamp = Optional.ofNullable(wptType.getTime())
+                .flatMap((xmlGC) -> Optional.of(xmlGC.toGregorianCalendar().toZonedDateTime().toLocalDateTime()))
+                .orElse(null);
 
         String name = Optional.ofNullable(wptType.getName()).orElse("");
         return new WayPoint(latitude, longitude, elevation, timestamp, name);
+    }
+
+    /**
+     * creates a TrackPoint object from a wptType object
+     *
+     * @param wptType
+     *         JAXB wptType
+     * @return TrackPoint
+     */
+    private TrackPoint createTrackPoint(WptType wptType) {
+        Double latitude = Optional.ofNullable(wptType.getLat()).orElse(BigDecimal.ZERO).doubleValue();
+        Double longitude = Optional.ofNullable(wptType.getLon()).orElse(BigDecimal.ZERO).doubleValue();
+        Double elevation = Optional.ofNullable(wptType.getEle()).orElse(BigDecimal.ZERO).doubleValue();
+
+        LocalDateTime timestamp = Optional.ofNullable(wptType.getTime())
+                .flatMap((xmlGC) -> Optional.of(xmlGC.toGregorianCalendar().toZonedDateTime().toLocalDateTime()))
+                .orElse(null);
+
+        return new TrackPoint(latitude, longitude, elevation, timestamp);
     }
 
     /**
@@ -119,19 +139,18 @@ public class TrackLoaderGPX implements TrackLoader {
         String metadataName = optionalMeta.flatMap((metadata) -> Optional.ofNullable(metadata.getName())).orElse("");
 
         // get the waypoints
-        List<WayPoint> wayPoints = track.getWayPoints();
         Optional.ofNullable(gpxType.getWpt())
-                .ifPresent((list) -> list.stream().map(this::createWayPoint).forEach(wayPoints::add));
+                .ifPresent((list) -> list.stream().map(this::createWayPoint).forEach(track::addWayPoint));
 
         // process the tracks
         final List<String> trackNames = new ArrayList<>();
-        List<WayPoint> trackPoints = track.getTrackPoints();
+        List<TrackPoint> trackPoints = track.getTrackPoints();
         Optional.ofNullable(gpxType.getTrk()).ifPresent((trks) -> trks.forEach((trk) -> {
             Optional.ofNullable(trk.getName()).ifPresent(trackNames::add);
             // do other stuff with track
             Optional.ofNullable(trk.getTrkseg()).ifPresent((trkSegs) -> trkSegs.forEach(
                     (trkSeg) -> Optional.ofNullable(trkSeg.getTrkpt()).ifPresent(
-                            (trkPts) -> trkPts.stream().map(this::createWayPoint).forEach(trackPoints::add))));
+                            (trkPts) -> trkPts.stream().map(this::createTrackPoint).forEach(trackPoints::add))));
         }));
 
         track.setName(buildTrackName(metadataName, trackNames, filename));

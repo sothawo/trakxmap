@@ -17,7 +17,7 @@ package com.sothawo.trakxmap.db;
 
 import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.Extent;
-import com.sothawo.trakxmap.track.WayPoint;
+import com.sothawo.trakxmap.track.TrackPoint;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PathTools;
 import javafx.beans.property.SimpleStringProperty;
@@ -46,13 +46,13 @@ public class Track {
     /** the name of the track */
     private final SimpleStringProperty name = new SimpleStringProperty(I18N.get(I18N.TRACK_NAME_DEFAULT));
     /** the waypoints of the track */
-    private final List<WayPoint> wayPoints = new ArrayList<>();
-    /** the trackpooints of the track */
-    private final List<WayPoint> trackPoints = new ArrayList<>();
+    private List<WayPoint> wayPoints = new ArrayList<>();
+    /** the trackpoints of the track */
+    private final List<TrackPoint> trackPoints = new ArrayList<>();
 
     /** the extent of the track */
     private Extent extent = null;
-    /** CoordinateLine representig this track */
+    /** CoordinateLine representing this track */
     private CoordinateLine coordinateLine = null;
 
 // --------------------------- CONSTRUCTORS ---------------------------
@@ -70,7 +70,7 @@ public class Track {
     public CoordinateLine getCoordinateLine() {
         if (null == coordinateLine) {
             coordinateLine =
-                    new CoordinateLine(trackPoints.stream().map(WayPoint::getCoordinate).collect(Collectors.toList())
+                    new CoordinateLine(trackPoints.stream().map(TrackPoint::getCoordinate).collect(Collectors.toList())
                     ).setColor(Color.RED).setWidth(5);
         }
         return coordinateLine;
@@ -87,7 +87,7 @@ public class Track {
         // extent can only be calculated when more than 2 points are available
         if (null == extent && trackPoints.size() >= 2) {
             extent = Extent.forCoordinates(
-                    trackPoints.stream().map(WayPoint::getCoordinate).collect(Collectors.toList()));
+                    trackPoints.stream().map(TrackPoint::getCoordinate).collect(Collectors.toList()));
         }
         return extent;
     }
@@ -109,13 +109,18 @@ public class Track {
     }
 
     @Transient
-    public List<WayPoint> getTrackPoints() {
+    public List<TrackPoint> getTrackPoints() {
         return trackPoints;
     }
 
-    @Transient
+    @OneToMany(mappedBy = "track", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderBy("sequence")
     public List<WayPoint> getWayPoints() {
         return wayPoints;
+    }
+
+    public void setWayPoints(List<WayPoint> wayPoints) {
+        this.wayPoints = wayPoints;
     }
 
 // ------------------------ CANONICAL METHODS ------------------------
@@ -123,8 +128,8 @@ public class Track {
     @Override
     public String toString() {
         return "Track{" +
-                "name=" + name +
-                "filename=" + filename +
+                "name=" + name.getValue() +
+                " filename=" + filename +
                 ", wayPoints=" + wayPoints +
                 ", #trackPoints=" + trackPoints.size() +
                 ", extent=" + getExtent().toString() +
@@ -132,6 +137,12 @@ public class Track {
     }
 
 // -------------------------- OTHER METHODS --------------------------
+
+    public void addWayPoint(WayPoint wayPoint) {
+        wayPoint.setTrack(this);
+        wayPoint.setSequence(wayPoints.size() + 1);
+        wayPoints.add(wayPoint);
+    }
 
     @Column(name = "NAME", length = 255)
     public String getName() {
