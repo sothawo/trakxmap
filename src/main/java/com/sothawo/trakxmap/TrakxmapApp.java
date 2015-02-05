@@ -19,10 +19,12 @@ import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
+import com.sothawo.trakxmap.db.DB;
 import com.sothawo.trakxmap.db.DatabaseUpdateTask;
 import com.sothawo.trakxmap.track.Track;
 import com.sothawo.trakxmap.track.TrackLoader;
 import com.sothawo.trakxmap.track.TrackLoaderGPX;
+import com.sothawo.trakxmap.util.Failure;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PreferencesBindings;
 import com.typesafe.config.Config;
@@ -96,6 +98,9 @@ public class TrakxmapApp extends Application {
 
     /** Flag wether the database update is finished */
     private AtomicBoolean dbUpdateFinished = new AtomicBoolean(false);
+
+    /** the dtabase connector object */
+    private Optional<DB> db = Optional.empty();
 
 // -------------------------- STATIC METHODS --------------------------
 
@@ -194,29 +199,8 @@ public class TrakxmapApp extends Application {
         this.primaryStage = primaryStage;
 
         logger.info(I18N.get(I18N.LOG_START_PROGRAM));
+        initializeDatabase();
 
-        // fire off the db update
-        DatabaseUpdateTask dbUpdateTask = new DatabaseUpdateTask();
-        dbUpdateTask.stateProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.equals(Worker.State.SUCCEEDED)) {
-                dbUpdateTask.getValue().ifPresent(failure -> {
-                    if (failure.getCause().isPresent()) {
-                        logger.error(failure.getMessage(), failure.getCause().get());
-                    } else {
-                        logger.error(failure.getMessage());
-                    }
-                });
-                dbUpdateFinished.set(true);
-            } else if (newValue.equals(Worker.State.FAILED)) {
-                // something bad happened that was not expected by the updater
-                logger.error(I18N.get(I18N.LOG_DB_UPDATE_ERROR), dbUpdateTask.getException());
-                dbUpdateFinished.set(true);
-            }
-            if (dbUpdateFinished.get()) {
-                logger.info(I18N.get(I18N.LOG_DB_UPDATE_FINISHED));
-            }
-        });
-        threadPool.submit(dbUpdateTask);
 
         primaryStage.setTitle(config.getString(CONF_WINDOW_TITLE));
         primaryStage.setScene(setupPrimaryScene());
@@ -225,6 +209,40 @@ public class TrakxmapApp extends Application {
         primaryStage.show();
 
         logger.debug(I18N.get(I18N.LOG_START_PROGRAM_FINISHED));
+    }
+
+    /**
+     * initializes the databse by firing off the update in a different threads and creating th DB object when the update
+     * is finished.
+     */
+    private void initializeDatabase() {
+        // fire off the db update
+        DatabaseUpdateTask dbUpdateTask = new DatabaseUpdateTask();
+        dbUpdateTask.stateProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.equals(Worker.State.SUCCEEDED)) {
+                Optional<Failure> failure = dbUpdateTask.getValue();
+                if (failure.isPresent()) {
+                    String message = failure.get().getMessage();
+                    Optional<Throwable> cause = failure.get().getCause();
+                    if (cause.isPresent()) {
+                        logger.error(message, cause.get());
+                    } else {
+                        logger.error(message);
+                    }
+                } else {
+                    db = Optional.of(new DB());
+                }
+                dbUpdateFinished.set(true);
+            } else if (newValue.equals(Worker.State.FAILED)) {
+                // something bad happened that was not expected by the updater
+                logger.error(I18N.get(I18N.LOG_DB_UPDATE_ERROR), dbUpdateTask.getException());
+                dbUpdateFinished.set(true);
+            }
+            if (dbUpdateFinished.get()) {
+                logger.info(I18N.get(I18N.LOG_DB_INIT_FINISHED));
+            }
+        });
+        threadPool.submit(dbUpdateTask);
     }
 
     /**
@@ -443,6 +461,7 @@ public class TrakxmapApp extends Application {
     @Override
     public void stop() throws Exception {
         super.stop();
+        db.ifPresent(DB::close);
         logger.info(I18N.get(I18N.LOG_STOP_PROGRAM));
     }
 

@@ -10,7 +10,9 @@
         </encoder>
     </appender>
 
-    <logger name="com.sothawo" level="debug" />
+    <logger name="com.sothawo" level="trace" />
+    <logger name="com.sothawo.mapjfx" level="info" />
+
     <logger name="liquibase" level="info" />
 
     <!--  setting this to more than INFO crashes the JVM -->
