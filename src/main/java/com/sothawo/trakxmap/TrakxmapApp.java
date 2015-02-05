@@ -19,11 +19,11 @@ import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
+import com.sothawo.trakxmap.db.DatabaseUpdateTask;
 import com.sothawo.trakxmap.track.Track;
 import com.sothawo.trakxmap.track.TrackLoader;
 import com.sothawo.trakxmap.track.TrackLoaderGPX;
 import com.sothawo.trakxmap.util.I18N;
-import com.sothawo.trakxmap.util.PathTools;
 import com.sothawo.trakxmap.util.PreferencesBindings;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -33,6 +33,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.concurrent.Worker;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -44,22 +45,15 @@ import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import liquibase.Contexts;
-import liquibase.Liquibase;
-import liquibase.database.DatabaseConnection;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.LiquibaseException;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -100,6 +94,9 @@ public class TrakxmapApp extends Application {
     /** threadpool for work to be done in the background */
     private ExecutorService threadPool;
 
+    /** Flag wether the database update is finished */
+    private AtomicBoolean dbUpdateFinished = new AtomicBoolean(false);
+
 // -------------------------- STATIC METHODS --------------------------
 
     // initialize logging and install Bridge from JUL to SLF4J
@@ -126,8 +123,6 @@ public class TrakxmapApp extends Application {
             thread.setDaemon(true);
             return thread;
         });
-
-        updateDatabase();
     }
 
     /**
@@ -200,13 +195,36 @@ public class TrakxmapApp extends Application {
 
         logger.info(I18N.get(I18N.LOG_START_PROGRAM));
 
+        // fire off the db update
+        DatabaseUpdateTask dbUpdateTask = new DatabaseUpdateTask();
+        dbUpdateTask.stateProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.equals(Worker.State.SUCCEEDED)) {
+                dbUpdateTask.getValue().ifPresent(failure -> {
+                    if (failure.getCause().isPresent()) {
+                        logger.error(failure.getMessage(), failure.getCause().get());
+                    } else {
+                        logger.error(failure.getMessage());
+                    }
+                });
+                dbUpdateFinished.set(true);
+            } else if (newValue.equals(Worker.State.FAILED)) {
+                // something bad happened that was not expected by the updater
+                logger.error(I18N.get(I18N.LOG_DB_UPDATE_ERROR), dbUpdateTask.getException());
+                dbUpdateFinished.set(true);
+            }
+            if (dbUpdateFinished.get()) {
+                logger.info(I18N.get(I18N.LOG_DB_UPDATE_FINISHED));
+            }
+        });
+        threadPool.submit(dbUpdateTask);
+
         primaryStage.setTitle(config.getString(CONF_WINDOW_TITLE));
         primaryStage.setScene(setupPrimaryScene());
 
         logger.trace(I18N.get(I18N.LOG_SHOWING_STAGE));
         primaryStage.show();
 
-        logger.trace(I18N.get(I18N.LOG_START_PROGRAM_FINISHED));
+        logger.debug(I18N.get(I18N.LOG_START_PROGRAM_FINISHED));
     }
 
     /**
@@ -422,20 +440,10 @@ public class TrakxmapApp extends Application {
         mapView.initialize();
     }
 
-    /**
-     * updates the database, if necessary.
-     */
-    private boolean updateDatabase() {
-        logger.info(I18N.get(I18N.LOG_DB_UPDATE_NECESSARY));
-        try {
-            DatabaseConnection dbConnection = new JdbcConnection(DriverManager.getConnection(PathTools.getJdbcUrl()));
-            Liquibase liquibase = new Liquibase("db/db-changelog.xml", new ClassLoaderResourceAccessor(), dbConnection);
-            liquibase.update(new Contexts());
-            return true;
-        } catch (SQLException | LiquibaseException e) {
-            logger.error(I18N.get(I18N.LOG_DB_UPDATE_ERROR), e);
-        }
-        return false;
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        logger.info(I18N.get(I18N.LOG_STOP_PROGRAM));
     }
 
 // --------------------------- main() method ---------------------------

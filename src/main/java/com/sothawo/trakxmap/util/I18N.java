@@ -59,6 +59,8 @@ public class I18N {
     public static final String ERROR_NO_TRACKLOADER_FOR_FILE = "error.no.trackloader.for.file";
     public static final String LOG_DB_UPDATE_NECESSARY = "log.db.update.necessary";
     public static final String LOG_DB_UPDATE_ERROR = "log.db.update.error";
+    public static final String LOG_DB_UPDATE_FINISHED = "log.db.update.finished";
+    public static final String LOG_STOP_PROGRAM = "log.stop.program";
 
     private static final Logger logger = LoggerFactory.getLogger(I18N.class);
     private static final ObjectProperty<Locale> locale;
