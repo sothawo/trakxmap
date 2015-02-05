@@ -183,10 +183,17 @@ public class TrakxmapApp extends Application {
                     return track;
                 }
             };
-            // wait for the task to send back the value by observing the valueProperty  and put it in the tracklist
+            // wait for the task to send back the value by observing the valueProperty
             task.valueProperty().addListener((observable, oldValue, newValue) -> {
                 if (null != newValue) {
-                    newValue.ifPresent(trackList::add);
+                    if (newValue.isPresent()) {
+                        Track track = newValue.get();
+                        // store in db and trackList
+                        db.ifPresent(d -> {
+                            d.store(track);
+                        });
+                        trackList.add(track);
+                    }
                 }
             });
             //Send the task to the threadpool
@@ -221,15 +228,7 @@ public class TrakxmapApp extends Application {
         dbUpdateTask.stateProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.equals(Worker.State.SUCCEEDED)) {
                 Optional<Failure> failure = dbUpdateTask.getValue();
-                if (failure.isPresent()) {
-                    String message = failure.get().getMessage();
-                    Optional<Throwable> cause = failure.get().getCause();
-                    if (cause.isPresent()) {
-                        logger.error(message, cause.get());
-                    } else {
-                        logger.error(message);
-                    }
-                } else {
+                if (!failure.isPresent()) {
                     db = Optional.of(new DB());
                 }
                 dbUpdateFinished.set(true);

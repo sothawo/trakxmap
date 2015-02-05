@@ -6,4 +6,26 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
+    <changeSet id="1" author="pj.meisch@sothawo.com">
+        <comment>create TRACK table with id and name</comment>
+        <createTable tableName="TRACK">
+            <column name="ID" type="long">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="NAME" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <!-- id column is identity -->
+        <addAutoIncrement tableName="TRACK" columnName="ID" columnDataType="long" startWith="100" incrementBy="1"/>
+    </changeSet>
+
+    <changeSet id="2" author="pj.meisch@sothawo.com">
+        <comment>add FILENAME column to TRACK table</comment>
+        <addColumn tableName="TRACK">
+            <column name="FILENAME" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

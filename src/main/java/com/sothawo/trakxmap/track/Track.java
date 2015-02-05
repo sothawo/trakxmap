@@ -21,6 +21,9 @@ import com.sothawo.trakxmap.util.I18N;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.paint.Color;
 
+import javax.persistence.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,8 +33,15 @@ import java.util.stream.Collectors;
  *
  * @author P.J. Meisch (pj.meisch@sothawo.com).
  */
+@Entity
+@Table(name = "TRACK")
 public class Track {
 // ------------------------------ FIELDS ------------------------------
+
+    /** db id of the track */
+    private Long id;
+    /** the filename where the track was loaded from (without path) */
+    private String filename;
 
     /** the name of the track */
     private final SimpleStringProperty name = new SimpleStringProperty(I18N.get(I18N.TRACK_NAME_DEFAULT));
@@ -39,9 +49,9 @@ public class Track {
     private final List<WayPoint> wayPoints = new ArrayList<>();
     /** the trackpooints of the track */
     private final List<WayPoint> trackPoints = new ArrayList<>();
+
     /** the extent of the track */
     private Extent extent = null;
-
     /** CoordinateLine representig this track */
     private CoordinateLine coordinateLine = null;
 
@@ -56,6 +66,7 @@ public class Track {
 
 // --------------------- GETTER / SETTER METHODS ---------------------
 
+    @Transient
     public CoordinateLine getCoordinateLine() {
         if (null == coordinateLine) {
             coordinateLine =
@@ -71,6 +82,7 @@ public class Track {
      *
      * @return the extent
      */
+    @Transient
     public Extent getExtent() {
         // extent can only be calculated when more than 2 points are available
         if (null == extent && trackPoints.size() >= 2) {
@@ -80,10 +92,28 @@ public class Track {
         return extent;
     }
 
+    @Column(name = "FILENAME", length = 255)
+    public String getFilename() {
+        return filename;
+    }
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", unique = true)
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    @Transient
     public List<WayPoint> getTrackPoints() {
         return trackPoints;
     }
 
+    @Transient
     public List<WayPoint> getWayPoints() {
         return wayPoints;
     }
@@ -102,6 +132,7 @@ public class Track {
 
 // -------------------------- OTHER METHODS --------------------------
 
+    @Column(name = "NAME", length = 255)
     public String getName() {
         return name.get();
     }
@@ -119,6 +150,15 @@ public class Track {
     public Extent recalculateExtent() {
         extent = null;
         return getExtent();
+    }
+
+    public void setFilename(String filename) {
+        if (null != filename) {
+            Path pathFilename = Paths.get(filename).getFileName();
+            if (null != pathFilename) {
+                this.filename = pathFilename.toString();
+            }
+        }
     }
 
     public void setName(String name) {

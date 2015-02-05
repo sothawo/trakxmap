@@ -133,7 +133,7 @@ public class TrackLoaderGPX implements TrackLoader {
         }));
 
         track.setName(buildTrackName(metadataName, trackNames, filename));
-
+        track.setFilename(filename);
         logger.debug("{}", track);
         return Optional.of(track);
     }
@@ -150,6 +150,7 @@ public class TrackLoaderGPX implements TrackLoader {
      * @return name for Track Object
      */
     private String buildTrackName(String metadataName, List<String> trackNames, String filename) {
+        // TODO: strip path from filename
         String nameFromTracks = String.join("/", trackNames);
         String name = metadataName.isEmpty() ? nameFromTracks :
                 (metadataName.equals(nameFromTracks) ? metadataName : metadataName + '(' + nameFromTracks + ')');

@@ -15,20 +15,21 @@
 */
 package com.sothawo.trakxmap.db;
 
+import com.sothawo.trakxmap.track.Track;
+import com.sothawo.trakxmap.util.Failure;
 import com.sothawo.trakxmap.util.PathTools;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceProviderResolver;
 import javax.persistence.spi.PersistenceProviderResolverHolder;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * a DB Object encapsulates the Hibernate Logic and methods. It must be closed to release it's resources.
@@ -100,5 +101,27 @@ public class DB implements AutoCloseable {
         } catch (RuntimeException e) {
             logger.warn("DB", e);
         }
+    }
+
+    /**
+     * stores a track in the database
+     *
+     * @param track
+     *         the track to store
+     */
+    public Optional<Failure> store(Track track) {
+        if (null != track) {
+            try {
+                EntityManager em = emf.createEntityManager();
+                EntityTransaction tx = em.getTransaction();
+                tx.begin();
+                em.persist(track);
+                tx.commit();
+                em.close();
+            } catch (IllegalStateException e) {
+                return Optional.of(new Failure("store", e));
+            }
+        }
+        return Optional.empty();
     }
 }
