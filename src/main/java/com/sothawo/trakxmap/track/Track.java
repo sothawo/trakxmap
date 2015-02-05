@@ -18,12 +18,11 @@ package com.sothawo.trakxmap.track;
 import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.Extent;
 import com.sothawo.trakxmap.util.I18N;
+import com.sothawo.trakxmap.util.PathTools;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.paint.Color;
 
 import javax.persistence.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -124,6 +123,7 @@ public class Track {
     public String toString() {
         return "Track{" +
                 "name=" + name +
+                "filename=" + filename +
                 ", wayPoints=" + wayPoints +
                 ", #trackPoints=" + trackPoints.size() +
                 ", extent=" + getExtent().toString() +
@@ -142,7 +142,7 @@ public class Track {
     }
 
     /**
-     * recalculates the etxent. This is necessary if the trackpoint list was modified after the last call to
+     * recalculates the extent. This is necessary if the trackpoint list was modified after the last call to
      * getExtent();
      *
      * @return the extent
@@ -153,12 +153,7 @@ public class Track {
     }
 
     public void setFilename(String filename) {
-        if (null != filename) {
-            Path pathFilename = Paths.get(filename).getFileName();
-            if (null != pathFilename) {
-                this.filename = pathFilename.toString();
-            }
-        }
+        this.filename = PathTools.getFilenameFromPath(filename);
     }
 
     public void setName(String name) {

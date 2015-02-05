@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -74,6 +75,18 @@ public final class PathTools {
         String dir = getApplicationDataDirectory().orElse(".") + "/trakxmap/database";
         logger.debug("database directory: {}", dir);
         return Paths.get(dir);
+    }
+
+    /**
+     * returns the filanem part from a filename with path.
+     *
+     * @param filenameWithPath
+     *         complte filname with path
+     * @return filename
+     */
+    public static String getFilenameFromPath(String filenameWithPath) {
+        Path filename = Paths.get(Objects.requireNonNull(filenameWithPath)).getFileName();
+        return (null != filename) ? filename.toString() : filenameWithPath;
     }
 
 // --------------------------- CONSTRUCTORS ---------------------------

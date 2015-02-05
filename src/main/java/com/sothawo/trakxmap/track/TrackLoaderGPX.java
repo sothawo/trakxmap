@@ -19,6 +19,7 @@ import com.sothawo.trakxmap.generated.gpx.GpxType;
 import com.sothawo.trakxmap.generated.gpx.MetadataType;
 import com.sothawo.trakxmap.generated.gpx.WptType;
 import com.sothawo.trakxmap.util.I18N;
+import com.sothawo.trakxmap.util.PathTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,10 +151,9 @@ public class TrackLoaderGPX implements TrackLoader {
      * @return name for Track Object
      */
     private String buildTrackName(String metadataName, List<String> trackNames, String filename) {
-        // TODO: strip path from filename
         String nameFromTracks = String.join("/", trackNames);
         String name = metadataName.isEmpty() ? nameFromTracks :
                 (metadataName.equals(nameFromTracks) ? metadataName : metadataName + '(' + nameFromTracks + ')');
-        return name.isEmpty() ? filename : name;
+        return name.isEmpty() ? PathTools.getFilenameFromPath(filename) : name;
     }
 }
