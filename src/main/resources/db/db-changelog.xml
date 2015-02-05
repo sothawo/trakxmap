@@ -58,4 +58,37 @@
                                  constraintName="FK_WAYPOINT_TRACK"
                                  referencedTableName="TRACK" referencedColumnNames="ID"/>
     </changeSet>
+
+    <changeSet id="3" author="pj.meisch@sothawo.com">
+        <comment>create TRACKPOINT table</comment>
+        <createTable tableName="TRACKPOINT">
+            <column name="ID" type="long">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="SEQUENCE" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LATITUDE" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LONGITUDE" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ELEVATION" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TIMESTAMP" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+            <column name="TRACK_ID" type="long">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- id column is identity -->
+        <addAutoIncrement tableName="TRACKPOINT" columnName="ID" columnDataType="long" startWith="100" incrementBy="1"/>
+        <!-- TRACK_ID is FK into TRACK table -->
+        <addForeignKeyConstraint baseTableName="TRACKPOINT" baseColumnNames="TRACK_ID"
+                                 constraintName="FK_TRACKPOINT_TRACK"
+                                 referencedTableName="TRACK" referencedColumnNames="ID"/>
+    </changeSet>
 </databaseChangeLog>

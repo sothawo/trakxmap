@@ -17,7 +17,6 @@ package com.sothawo.trakxmap.db;
 
 import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.Extent;
-import com.sothawo.trakxmap.track.TrackPoint;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PathTools;
 import javafx.beans.property.SimpleStringProperty;
@@ -47,8 +46,9 @@ public class Track {
     private final SimpleStringProperty name = new SimpleStringProperty(I18N.get(I18N.TRACK_NAME_DEFAULT));
     /** the waypoints of the track */
     private List<WayPoint> wayPoints = new ArrayList<>();
+
     /** the trackpoints of the track */
-    private final List<TrackPoint> trackPoints = new ArrayList<>();
+    private List<TrackPoint> trackPoints = new ArrayList<>();
 
     /** the extent of the track */
     private Extent extent = null;
@@ -108,9 +108,14 @@ public class Track {
         this.id = id;
     }
 
-    @Transient
+    @OneToMany(mappedBy = "track", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderBy("sequence")
     public List<TrackPoint> getTrackPoints() {
         return trackPoints;
+    }
+
+    private void setTrackPoints(List<TrackPoint> trackPoints) {
+        this.trackPoints = trackPoints;
     }
 
     @OneToMany(mappedBy = "track", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -119,7 +124,7 @@ public class Track {
         return wayPoints;
     }
 
-    public void setWayPoints(List<WayPoint> wayPoints) {
+    private void setWayPoints(List<WayPoint> wayPoints) {
         this.wayPoints = wayPoints;
     }
 
@@ -138,6 +143,24 @@ public class Track {
 
 // -------------------------- OTHER METHODS --------------------------
 
+    /**
+     * adds a WayPoint, sets up the entity relationship and the internal sequence number.
+     *
+     * @param trackPoint
+     *         the TrackPoint to add
+     */
+    public void addTrackPoint(TrackPoint trackPoint) {
+        trackPoint.setTrack(this);
+        trackPoint.setSequence(trackPoints.size() + 1);
+        trackPoints.add(trackPoint);
+    }
+
+    /**
+     * adds a WayPoint, sets up the entity relationship and the internal sequence number.
+     *
+     * @param wayPoint
+     *         the WayPoint to add
+     */
     public void addWayPoint(WayPoint wayPoint) {
         wayPoint.setTrack(this);
         wayPoint.setSequence(wayPoints.size() + 1);

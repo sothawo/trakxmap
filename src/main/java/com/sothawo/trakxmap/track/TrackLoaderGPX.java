@@ -16,6 +16,7 @@
 package com.sothawo.trakxmap.track;
 
 import com.sothawo.trakxmap.db.Track;
+import com.sothawo.trakxmap.db.TrackPoint;
 import com.sothawo.trakxmap.db.WayPoint;
 import com.sothawo.trakxmap.generated.gpx.GpxType;
 import com.sothawo.trakxmap.generated.gpx.MetadataType;
@@ -144,13 +145,12 @@ public class TrackLoaderGPX implements TrackLoader {
 
         // process the tracks
         final List<String> trackNames = new ArrayList<>();
-        List<TrackPoint> trackPoints = track.getTrackPoints();
         Optional.ofNullable(gpxType.getTrk()).ifPresent((trks) -> trks.forEach((trk) -> {
             Optional.ofNullable(trk.getName()).ifPresent(trackNames::add);
             // do other stuff with track
             Optional.ofNullable(trk.getTrkseg()).ifPresent((trkSegs) -> trkSegs.forEach(
                     (trkSeg) -> Optional.ofNullable(trkSeg.getTrkpt()).ifPresent(
-                            (trkPts) -> trkPts.stream().map(this::createTrackPoint).forEach(trackPoints::add))));
+                            (trkPts) -> trkPts.stream().map(this::createTrackPoint).forEach(track::addTrackPoint))));
         }));
 
         track.setName(buildTrackName(metadataName, trackNames, filename));

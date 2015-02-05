@@ -13,10 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package com.sothawo.trakxmap.track;
+package com.sothawo.trakxmap.db;
 
 import com.sothawo.mapjfx.Coordinate;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -25,19 +26,31 @@ import java.util.Objects;
  *
  * @author P.J. Meisch (pj.meisch@sothawo.com).
  */
+@Entity
+@Table(name = "TRACKPOINT")
 public final class TrackPoint {
 // ------------------------------ FIELDS ------------------------------
 
+    /** db id of the track */
+    private Long id;
+    /** the internal order number of the waypoint within the track */
+    private Integer sequence;
+
     /** latitude */
-    private final Double latitude;
+    private Double latitude;
     /** longitude */
-    private final Double longitude;
+    private Double longitude;
     /** elevation */
-    private final Double elevation;
+    private Double elevation;
     /** timestamp */
-    private final LocalDateTime timestamp;
+    private LocalDateTime timestamp;
+    /** the track this trackpoint belongs to */
+    private Track track;
 
 // --------------------------- CONSTRUCTORS ---------------------------
+
+    public TrackPoint() {
+    }
 
     public TrackPoint(Double latitude, Double longitude, Double elevation, LocalDateTime timestamp) {
         this.latitude = Objects.requireNonNull(latitude);
@@ -49,12 +62,70 @@ public final class TrackPoint {
 
 // --------------------- GETTER / SETTER METHODS ---------------------
 
+    @Column(name = "ELEVATION")
     public Double getElevation() {
         return elevation;
     }
 
+    public void setElevation(Double elevation) {
+        this.elevation = elevation;
+    }
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", unique = true)
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    @Column(name = "LATITUDE", nullable = false)
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    @Column(name = "LONGITUDE", nullable = false)
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    @Column(name = "SEQUENCE", nullable = false)
+    public Integer getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(Integer sequence) {
+        this.sequence = sequence;
+    }
+
+    @Column(name = "TIMESTAMP", nullable = true)
     public LocalDateTime getTimestamp() {
         return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "TRACK_ID", nullable = false)
+    public Track getTrack() {
+        return track;
+    }
+
+    public void setTrack(Track track) {
+        this.track = track;
     }
 
 // ------------------------ CANONICAL METHODS ------------------------
@@ -97,8 +168,10 @@ public final class TrackPoint {
 
     /**
      * gets lat/lon as coordinate object
+     *
      * @return coordinate
      */
+    @Transient
     public Coordinate getCoordinate() {
         return new Coordinate(latitude, longitude);
     }
