@@ -15,6 +15,7 @@
 */
 package com.sothawo.trakxmap.db;
 
+import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.Extent;
 import com.sothawo.trakxmap.util.I18N;
@@ -87,9 +88,14 @@ public class Track {
     @Transient
     public Optional<Extent> getExtent() {
         // extent can only be calculated when more than 2 points are available
-        if (null == extent && trackPoints.size() >= 2) {
-            extent = Extent.forCoordinates(
-                    trackPoints.stream().map(TrackPoint::getCoordinate).collect(Collectors.toList()));
+        if (null == extent) {
+            List<Coordinate> coordinates = trackPoints.stream().map(TrackPoint::getCoordinate).collect(Collectors
+                    .toList());
+            coordinates.addAll(routePoints.stream().map(RoutePoint::getCoordinate).collect(Collectors.toList()));
+            coordinates.addAll(wayPoints.stream().map(WayPoint::getCoordinate).collect(Collectors.toList()));
+            if (coordinates.size() >= 2) {
+                extent = Extent.forCoordinates(coordinates);
+            }
         }
         return Optional.ofNullable(extent);
     }
