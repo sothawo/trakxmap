@@ -15,7 +15,7 @@
 
     <logger name="liquibase" level="info" />
 
-    <logger name="org.hibernate.SQL" level="debug" />
+    <logger name="org.hibernate.SQL" level="info" />
 
     <!--  setting this to more than INFO crashes the JVM -->
     <logger name="com.sun.javafx.webkit.prism" level = "info" />

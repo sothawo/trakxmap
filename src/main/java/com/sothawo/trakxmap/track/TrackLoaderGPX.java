@@ -15,6 +15,7 @@
 */
 package com.sothawo.trakxmap.track;
 
+import com.sothawo.trakxmap.db.RoutePoint;
 import com.sothawo.trakxmap.db.Track;
 import com.sothawo.trakxmap.db.TrackPoint;
 import com.sothawo.trakxmap.db.WayPoint;
@@ -99,6 +100,25 @@ public class TrackLoaderGPX implements TrackLoader {
         String name = Optional.ofNullable(wptType.getName()).orElse("");
         return new WayPoint(latitude, longitude, elevation, timestamp, name);
     }
+    /**
+     * creates a RoutePoint object from a wptType object
+     *
+     * @param wptType
+     *         JAXB wptType
+     * @return WayPoint
+     */
+    private RoutePoint createRoutePoint(WptType wptType) {
+        Double latitude = Optional.ofNullable(wptType.getLat()).orElse(BigDecimal.ZERO).doubleValue();
+        Double longitude = Optional.ofNullable(wptType.getLon()).orElse(BigDecimal.ZERO).doubleValue();
+        Double elevation = Optional.ofNullable(wptType.getEle()).orElse(BigDecimal.ZERO).doubleValue();
+
+        LocalDateTime timestamp = Optional.ofNullable(wptType.getTime())
+                .flatMap((xmlGC) -> Optional.of(xmlGC.toGregorianCalendar().toZonedDateTime().toLocalDateTime()))
+                .orElse(null);
+
+        String name = Optional.ofNullable(wptType.getName()).orElse("");
+        return new RoutePoint(latitude, longitude, elevation, timestamp, name);
+    }
 
     /**
      * creates a TrackPoint object from a wptType object
@@ -141,7 +161,11 @@ public class TrackLoaderGPX implements TrackLoader {
 
         // get the waypoints
         Optional.ofNullable(gpxType.getWpt())
-                .ifPresent((list) -> list.stream().map(this::createWayPoint).forEach(track::addWayPoint));
+                .ifPresent((wpts) -> wpts.stream().map(this::createWayPoint).forEach(track::addWayPoint));
+
+        // get the routepoints
+        Optional.ofNullable(gpxType.getRte()).ifPresent((rtes) -> rtes.forEach(rte -> Optional.ofNullable(rte
+                .getRtept()).ifPresent(rtePts -> rtePts.stream().map(this::createRoutePoint).forEach(track::addRoutePoint))));
 
         // process the tracks
         final List<String> trackNames = new ArrayList<>();

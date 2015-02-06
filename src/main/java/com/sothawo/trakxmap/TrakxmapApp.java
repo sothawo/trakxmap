@@ -17,6 +17,7 @@ package com.sothawo.trakxmap;
 
 import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.CoordinateLine;
+import com.sothawo.mapjfx.Extent;
 import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.db.DB;
@@ -439,7 +440,7 @@ public class TrakxmapApp extends Application {
             CoordinateLine coordinateLine = newTrack.getCoordinateLine();
             mapView.addCoordinateLine(coordinateLine);
             coordinateLine.setVisible(true);
-            mapView.setExtent(newTrack.getExtent());
+            newTrack.getExtent().ifPresent(mapView::setExtent);
         }
     }
 

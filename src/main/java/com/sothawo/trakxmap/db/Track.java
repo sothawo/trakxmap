@@ -25,6 +25,7 @@ import javafx.scene.paint.Color;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +47,8 @@ public class Track {
     private final SimpleStringProperty name = new SimpleStringProperty(I18N.get(I18N.TRACK_NAME_DEFAULT));
     /** the waypoints of the track */
     private List<WayPoint> wayPoints = new ArrayList<>();
-
+    /** the routepoints of the track */
+    private List<RoutePoint> routePoints = new ArrayList<>();
     /** the trackpoints of the track */
     private List<TrackPoint> trackPoints = new ArrayList<>();
 
@@ -83,13 +85,13 @@ public class Track {
      * @return the extent
      */
     @Transient
-    public Extent getExtent() {
+    public Optional<Extent> getExtent() {
         // extent can only be calculated when more than 2 points are available
         if (null == extent && trackPoints.size() >= 2) {
             extent = Extent.forCoordinates(
                     trackPoints.stream().map(TrackPoint::getCoordinate).collect(Collectors.toList()));
         }
-        return extent;
+        return Optional.ofNullable(extent);
     }
 
     @Column(name = "FILENAME", length = 255)
@@ -128,6 +130,16 @@ public class Track {
         this.wayPoints = wayPoints;
     }
 
+    @OneToMany(mappedBy = "track", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderBy("sequence")
+    public List<RoutePoint> getRoutePoints() {
+        return routePoints;
+    }
+
+    private void setRoutePoints(List<RoutePoint> routePoints) {
+        this.routePoints = routePoints;
+    }
+
 // ------------------------ CANONICAL METHODS ------------------------
 
     @Override
@@ -135,9 +147,9 @@ public class Track {
         return "Track{" +
                 "name=" + name.getValue() +
                 " filename=" + filename +
-                ", wayPoints=" + wayPoints +
+                ", #wayPoints=" + wayPoints.size() +
+                ", #routePoints=" + routePoints.size() +
                 ", #trackPoints=" + trackPoints.size() +
-                ", extent=" + getExtent().toString() +
                 '}';
     }
 
@@ -167,6 +179,18 @@ public class Track {
         wayPoints.add(wayPoint);
     }
 
+    /**
+     * adds a RoutePoint, sets up the entity relationship and the internal sequence number.
+     *
+     * @param routePoint
+     *         the RoutePoint to add
+     */
+    public void addRoutePoint(RoutePoint routePoint) {
+        routePoint.setTrack(this);
+        routePoint.setSequence(routePoints.size() + 1);
+        routePoints.add(routePoint);
+    }
+
     @Column(name = "NAME", length = 255)
     public String getName() {
         return name.get();
@@ -182,7 +206,7 @@ public class Track {
      *
      * @return the extent
      */
-    public Extent recalculateExtent() {
+    public Optional<Extent> recalculateExtent() {
         extent = null;
         return getExtent();
     }
