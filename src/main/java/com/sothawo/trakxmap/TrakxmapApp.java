@@ -17,7 +17,6 @@ package com.sothawo.trakxmap;
 
 import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.CoordinateLine;
-import com.sothawo.mapjfx.Extent;
 import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.db.DB;
@@ -434,12 +433,18 @@ public class TrakxmapApp extends Application {
      */
     private void trackSelectionChanged(Track oldTrack, Track newTrack) {
         if (null != oldTrack) {
-            mapView.removeCoordinateLine(oldTrack.getCoordinateLine());
+            mapView.removeCoordinateLine(oldTrack.getTrackLine());
+            mapView.removeCoordinateLine(oldTrack.getRouteLine());
         }
         if (null != newTrack) {
-            CoordinateLine coordinateLine = newTrack.getCoordinateLine();
-            mapView.addCoordinateLine(coordinateLine);
-            coordinateLine.setVisible(true);
+            CoordinateLine trackLine = newTrack.getTrackLine();
+            mapView.addCoordinateLine(trackLine);
+            trackLine.setVisible(true);
+
+            CoordinateLine routeLine = newTrack.getRouteLine();
+            mapView.addCoordinateLine(routeLine);
+            routeLine.setVisible(true);
+
             newTrack.getExtent().ifPresent(mapView::setExtent);
         }
     }

@@ -55,8 +55,10 @@ public class Track {
 
     /** the extent of the track */
     private Extent extent = null;
-    /** CoordinateLine representing this track */
-    private CoordinateLine coordinateLine = null;
+    /** CoordinateLine for the trackpoints */
+    private CoordinateLine trackLine = null;
+    /** CoordinateLine for the routepoints */
+    private CoordinateLine routeLine = null;
 
 // --------------------------- CONSTRUCTORS ---------------------------
 
@@ -69,14 +71,34 @@ public class Track {
 
 // --------------------- GETTER / SETTER METHODS ---------------------
 
+    /**
+     * gets the Coordinateline for the trackpoints
+     *
+     * @return CoordinateLine
+     */
     @Transient
-    public CoordinateLine getCoordinateLine() {
-        if (null == coordinateLine) {
-            coordinateLine =
+    public CoordinateLine getTrackLine() {
+        if (null == trackLine) {
+            trackLine =
                     new CoordinateLine(trackPoints.stream().map(TrackPoint::getCoordinate).collect(Collectors.toList())
                     ).setColor(Color.RED).setWidth(5);
         }
-        return coordinateLine;
+        return trackLine;
+    }
+
+    /**
+     * gets the Coordinateline for the rooutepoints
+     *
+     * @return CoordinateLine
+     */
+    @Transient
+    public CoordinateLine getRouteLine() {
+        if (null == routeLine) {
+            routeLine =
+                    new CoordinateLine(routePoints.stream().map(RoutePoint::getCoordinate).collect(Collectors.toList())
+                    ).setColor(Color.GREEN).setWidth(3);
+        }
+        return routeLine;
     }
 
     /**
