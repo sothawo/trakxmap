@@ -43,6 +43,7 @@ public class I18N {
     public static final String EXT_FILE_GPX = "extension.file.gpx";
     public static final String EXT_FILE_ALL = "extension.file.all";
     public static final String LABEL_SWITCH_LOCALE = "label.switch.locale";
+    public static final String LABEL_SWITCH_MAPTYPE = "label.switch.maptype";
     public static final String LABEL_TITLE_TRACKLIST = "label.title.tracklist";
     public static final String LABEL_DROP_TRACKFILE_HERE = "label.drop.trackfile.here";
     public static final String LABEL_FILECHOOSER_TRACKS = "label.filechooser.tracks";
@@ -52,8 +53,10 @@ public class I18N {
     public static final String LOG_SWITCH_LOCALE = "log.switch.locale";
     public static final String LOG_SHOWING_STAGE = "log.showing.stage";
     public static final String LOG_LOADING_TRACK = "log.loading.track";
+    public static final String LOG_LOADING_TRACKS = "log.loading.tracks";
     public static final String LOG_MAP_INITIALIZED = "log.map.initialized";
     public static final String TOOLTIP_SWITCH_LOCALE = "tooltip.switch.locale";
+    public static final String TOOLTIP_SWITCH_MAPTYPE = "tooltip.switch.maptype";
     public static final String TRACK_NAME_DEFAULT = "track.name.default";
     public static final String ERROR_LOADING_TRACK = "error.loading.track";
     public static final String ERROR_NO_TRACKLOADER_FOR_FILE = "error.no.trackloader.for.file";

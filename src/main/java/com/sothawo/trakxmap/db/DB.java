@@ -91,8 +91,9 @@ public class DB implements AutoCloseable {
      *
      * @return List of track, may be emtpy but not null
      */
-    public List<Track> getTracks() {
+    public List<Track> loadTracks() {
         List<Track> tracks = new ArrayList<>();
+        logger.debug(I18N.get(I18N.LOG_LOADING_TRACKS));
         try {
             EntityManager em = emf.createEntityManager();
             List<Track> resultList = em.createQuery("select t from Track t", Track.class).getResultList();

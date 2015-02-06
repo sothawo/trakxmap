@@ -41,6 +41,6 @@ public final class TrackPoint extends Point {
 
     @Override
     public String toString() {
-        return "TrackPoint{ " + super.toString() + "}";
+        return "TrackPoint{ " + super.toString() + '}';
     }
 }

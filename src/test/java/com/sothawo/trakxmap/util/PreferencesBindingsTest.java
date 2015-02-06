@@ -52,7 +52,7 @@ public class PreferencesBindingsTest {
     @Test
     public void prefIsRemoved() throws Exception {
         PreferencesBindings prefs = PreferencesBindings.forPackage(PreferencesBindingsTest.class);
-        SimpleStringProperty prop = prefs.simpleStringPropertyFor(KEY_STRING_1, DEF_STRING_1);
+        prefs.simpleStringPropertyFor(KEY_STRING_1, DEF_STRING_1);
         prefs.remove(KEY_STRING_1);
         assertFalse(prefs.hasAny(KEY_STRING_1));
         for (String key : javaPrefs.keys()) {

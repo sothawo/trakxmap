@@ -17,6 +17,7 @@ package com.sothawo.trakxmap;
 
 import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.CoordinateLine;
+import com.sothawo.mapjfx.MapType;
 import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.db.DB;
@@ -58,6 +59,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Trakxmap application class.
@@ -73,6 +75,7 @@ public class TrakxmapApp extends Application {
     private static final String PREF_SPLIT_1 = "split1FirstDivider";
     private static final String PREF_SPLIT_2 = "split2FirstDivider";
     private static final String PREF_LANGUAGE = "language";
+    private static final String PREF_MAPTYPE = "maptype";
     private static final String CONF_WINDOW_TITLE = "windowTitle";
 
 
@@ -190,9 +193,7 @@ public class TrakxmapApp extends Application {
                     if (newValue.isPresent()) {
                         Track track = newValue.get();
                         // store in db and trackList
-                        db.ifPresent(d -> {
-                            d.store(track);
-                        });
+                        db.ifPresent(d -> d.store(track));
                         trackList.add(track);
                     }
                 }
@@ -220,19 +221,28 @@ public class TrakxmapApp extends Application {
     }
 
     /**
-     * initializes the database by firing off the update in a different thread and creating th DB object when the
-     * update is finished. After that the stores Tracks are loaded.
+     * initializes the database by firing off the update in a different thread and creating the DB object when the
+     * update is finished. After that the stored Tracks are loaded.
      */
     private void initializeDatabase() {
-        // fire off the db update
+        // create an update task
         DatabaseUpdateTask dbUpdateTask = new DatabaseUpdateTask();
+        // watch for SUCCEED
         dbUpdateTask.stateProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.equals(Worker.State.SUCCEEDED)) {
                 Optional<Failure> failure = dbUpdateTask.getValue();
+                // no failure, create DB connector and fire off track selection
                 if (!failure.isPresent()) {
                     db = Optional.of(new DB());
-                    List<Track> tracks = db.get().getTracks();
-                    Platform.runLater(() -> trackList.addAll(tracks));
+                    // fire off a task to load the tracks from the db
+                    threadPool.submit(new Task<Void>() {
+                        @Override
+                        protected Void call() throws Exception {
+                            List<Track> tracks = db.get().loadTracks();
+                            Platform.runLater(() -> trackList.addAll(tracks));
+                            return null;
+                        }
+                    });
                 }
                 dbUpdateFinished.set(true);
             } else if (newValue.equals(Worker.State.FAILED)) {
@@ -244,6 +254,7 @@ public class TrakxmapApp extends Application {
                 logger.info(I18N.get(I18N.LOG_DB_INIT_FINISHED));
             }
         });
+        // send update task to the thread pool
         threadPool.submit(dbUpdateTask);
     }
 
@@ -262,6 +273,9 @@ public class TrakxmapApp extends Application {
         sceneVBox.getChildren().add(menuBar);
         */
 
+        // initialize the map view; do it first, so that other components referencing the MapView have something to
+        // reference
+        createMapView();
 
         // create content
         BorderPane content = new BorderPane();
@@ -275,12 +289,10 @@ public class TrakxmapApp extends Application {
         SplitPane splitPane2 = new SplitPane();
         splitPane2.setOrientation(Orientation.VERTICAL);
 
+        splitPane2.getItems().add(mapView);
+
         // initialize the loadTrackFiles view
         splitPane1.getItems().add(createTracksViewNode());
-
-        // initialize the map view
-        setupMapView();
-        splitPane2.getItems().add(mapView);
 
         Label label = I18N.labelForKey(I18N.LABEL_DUMMY_ELEVATION);
         label.setMinHeight(100.0);
@@ -313,19 +325,55 @@ public class TrakxmapApp extends Application {
     }
 
     /**
+     * sets up and initializes the map view. the MapView object is stored in a field as it is needed in different 
+     * places of the application.
+     */
+    private void createMapView() {
+        mapView = new MapView();
+        mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                logger.trace(I18N.get(I18N.LOG_MAP_INITIALIZED));
+                mapView.setAnimationDuration(1000);
+                // show Europe
+                mapView.setCenter(new Coordinate(46.67959446564012, 5.537109374999998));
+                mapView.setZoom(5);
+            }
+        });
+        mapView.initialize();
+    }
+
+    /**
      * creates the applications toolbar.
      *
      * @return ToolBar
      */
     private Node createToolbar() {
+        SimpleStringProperty maptypePref = prefs.simpleStringPropertyFor(PREF_MAPTYPE, MapType.OSM.name());
+        String actMapType = maptypePref.get();
+        // Label for the map type selection
+        Label labelMapType = I18N.labelForKey(I18N.LABEL_SWITCH_MAPTYPE);
+        // ComboBox for switching the MapType
+        ComboBox<String> mapTypeComboBox = new ComboBox<>();
+        mapTypeComboBox.setTooltip(I18N.tooltipForKey(I18N.TOOLTIP_SWITCH_MAPTYPE));
+        mapTypeComboBox.setEditable(false);
+        mapTypeComboBox.getItems().addAll(
+                Arrays.stream(MapType.values()).map(MapType::name).collect(Collectors.toList()));
+        mapTypeComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (null != newValue) {
+                mapView.setMapType(MapType.valueOf(newValue));
+            }
+        });
+        mapTypeComboBox.getSelectionModel().select(actMapType);
+        maptypePref.bind(mapTypeComboBox.getSelectionModel().selectedItemProperty());
+
         // Label for the Language change with automatic change
         Label labelLanguages = I18N.labelForKey(I18N.LABEL_SWITCH_LOCALE);
         // combobox for switching the locale
-        ComboBox<Locale> comboLanguages = new ComboBox<>();
-        comboLanguages.setTooltip(I18N.tooltipForKey(I18N.TOOLTIP_SWITCH_LOCALE));
-        comboLanguages.setEditable(false);
-        comboLanguages.getItems().addAll(I18N.getSupportedLocales());
-        comboLanguages.setConverter(new StringConverter<Locale>() {
+        ComboBox<Locale> languageComboBox = new ComboBox<>();
+        languageComboBox.setTooltip(I18N.tooltipForKey(I18N.TOOLTIP_SWITCH_LOCALE));
+        languageComboBox.setEditable(false);
+        languageComboBox.getItems().addAll(I18N.getSupportedLocales());
+        languageComboBox.setConverter(new StringConverter<Locale>() {
             @Override
             public String toString(Locale l) {
                 return l.getDisplayLanguage(l);
@@ -337,10 +385,10 @@ public class TrakxmapApp extends Application {
                 return Locale.forLanguageTag(s);
             }
         });
-        comboLanguages.getSelectionModel().select(I18N.getLocale());
-        I18N.localeProperty().bindBidirectional(comboLanguages.valueProperty());
+        languageComboBox.getSelectionModel().select(I18N.getLocale());
+        I18N.localeProperty().bindBidirectional(languageComboBox.valueProperty());
 
-        return new ToolBar(labelLanguages, comboLanguages);
+        return new ToolBar(labelMapType, mapTypeComboBox, labelLanguages, languageComboBox);
     }
 
     /**
@@ -447,23 +495,6 @@ public class TrakxmapApp extends Application {
 
             newTrack.getExtent().ifPresent(mapView::setExtent);
         }
-    }
-
-    /**
-     * sets up and initializes the map view.
-     */
-    private void setupMapView() {
-        mapView = new MapView();
-        mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                logger.trace(I18N.get(I18N.LOG_MAP_INITIALIZED));
-                mapView.setAnimationDuration(1000);
-                // show Europe
-                mapView.setCenter(new Coordinate(46.67959446564012, 5.537109374999998));
-                mapView.setZoom(5);
-            }
-        });
-        mapView.initialize();
     }
 
     @Override

@@ -17,9 +17,7 @@ package com.sothawo.trakxmap.db;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
-import java.sql.Date;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
