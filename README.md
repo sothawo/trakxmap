@@ -38,6 +38,11 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ## version history
 
+### 0.3.0.
+
+* route lines are shown along with track lines if present in gpx file
+* track data is persisted to the internal database
+
 ### 0.2.0.
 
 * drag gpx-files into the application to load the track data or select via filechooser
