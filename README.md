@@ -38,6 +38,10 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ## version history
 
+### 0.3.1-SNAPSHOT
+
+* track list is ordered, latest terack at top
+
 ### 0.3.0.
 
 * route lines are shown along with track lines if present in gpx file
