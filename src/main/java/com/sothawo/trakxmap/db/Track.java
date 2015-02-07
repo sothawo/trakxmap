@@ -20,8 +20,11 @@ import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.Extent;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PathTools;
+import com.sothawo.trakxmap.util.TrackTimeInfo;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.paint.Color;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -39,6 +42,8 @@ import java.util.stream.Collectors;
 public class Track {
 // ------------------------------ FIELDS ------------------------------
 
+    /** Logger */
+    private final static Logger logger = LoggerFactory.getLogger(Track.class);
     /** db id of the track */
     private Long id;
     /** the filename where the track was loaded from (without path) */
@@ -60,6 +65,9 @@ public class Track {
     /** CoordinateLine for the routepoints */
     private CoordinateLine routeLine = null;
 
+    /** the time info for the track */
+    private TrackTimeInfo timeInfo = null;
+
 // --------------------------- CONSTRUCTORS ---------------------------
 
     public Track() {
@@ -70,57 +78,6 @@ public class Track {
     }
 
 // --------------------- GETTER / SETTER METHODS ---------------------
-
-    /**
-     * gets the Coordinateline for the trackpoints
-     *
-     * @return CoordinateLine
-     */
-    @Transient
-    public CoordinateLine getTrackLine() {
-        if (null == trackLine) {
-            trackLine =
-                    new CoordinateLine(trackPoints.stream().map(TrackPoint::getCoordinate).collect(Collectors.toList())
-                    ).setColor(Color.RED).setWidth(5);
-        }
-        return trackLine;
-    }
-
-    /**
-     * gets the Coordinateline for the rooutepoints
-     *
-     * @return CoordinateLine
-     */
-    @Transient
-    public CoordinateLine getRouteLine() {
-        if (null == routeLine) {
-            routeLine =
-                    new CoordinateLine(routePoints.stream().map(RoutePoint::getCoordinate).collect(Collectors.toList())
-                    ).setColor(Color.GREEN).setWidth(3);
-        }
-        return routeLine;
-    }
-
-    /**
-     * gets the extent for the contined trackpoints. If the list of trackpoints is changed after the extent is
-     * calculated, the new extent must be calculated by calling recalculateExtent().
-     *
-     * @return the extent
-     */
-    @Transient
-    public Optional<Extent> getExtent() {
-        // extent can only be calculated when more than 2 points are available
-        if (null == extent) {
-            List<Coordinate> coordinates = trackPoints.stream().map(TrackPoint::getCoordinate).collect(Collectors
-                    .toList());
-            coordinates.addAll(routePoints.stream().map(RoutePoint::getCoordinate).collect(Collectors.toList()));
-            coordinates.addAll(wayPoints.stream().map(WayPoint::getCoordinate).collect(Collectors.toList()));
-            if (coordinates.size() >= 2) {
-                extent = Extent.forCoordinates(coordinates);
-            }
-        }
-        return Optional.ofNullable(extent);
-    }
 
     @Column(name = "FILENAME", length = 255)
     public String getFilename() {
@@ -136,6 +93,68 @@ public class Track {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    /**
+     * gets the Coordinateline for the routepoints
+     *
+     * @return CoordinateLine
+     */
+    @Transient
+    public CoordinateLine getRouteLine() {
+        if (null == routeLine) {
+            routeLine =
+                    new CoordinateLine(routePoints.stream().map(RoutePoint::getCoordinate).collect(Collectors.toList())
+                    ).setColor(Color.GREEN).setWidth(3);
+        }
+        return routeLine;
+    }
+
+    @OneToMany(mappedBy = "track", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderBy("sequence")
+    public List<RoutePoint> getRoutePoints() {
+        return routePoints;
+    }
+
+    private void setRoutePoints(List<RoutePoint> routePoints) {
+        this.routePoints = routePoints;
+    }
+
+    /**
+     * gets the lazy evaluated TrackTimeInfo
+     *
+     * @return TrackTimeInfo object
+     */
+    @Transient
+    public TrackTimeInfo getTimeInfo() {
+        if (null == timeInfo) {
+            timeInfo = new TrackTimeInfo();
+            trackPoints.stream().map(Point::getTimestamp).forEach(timeInfo::addTrackTime);
+            routePoints.stream().map(Point::getTimestamp).forEach(timeInfo::addRouteTime);
+            wayPoints.stream().map(Point::getTimestamp).forEach(timeInfo::addWaypointTime);
+            logger.debug("track {}, timestamp: {}", getName(), timeInfo.toString());
+        }
+        return timeInfo;
+    }
+
+    @Column(name = "NAME", length = 255)
+    public String getName() {
+        return name.get();
+    }
+
+    /**
+     * gets the Coordinateline for the trackpoints
+     *
+     * @return CoordinateLine
+     */
+    @Transient
+    public CoordinateLine getTrackLine() {
+        if (null == trackLine) {
+            trackLine =
+                    new CoordinateLine(trackPoints.stream().map(TrackPoint::getCoordinate).collect(Collectors.toList())
+                    ).setColor(Color.RED).setWidth(5);
+        }
+        return trackLine;
     }
 
     @OneToMany(mappedBy = "track", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -158,16 +177,6 @@ public class Track {
         this.wayPoints = wayPoints;
     }
 
-    @OneToMany(mappedBy = "track", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @OrderBy("sequence")
-    public List<RoutePoint> getRoutePoints() {
-        return routePoints;
-    }
-
-    private void setRoutePoints(List<RoutePoint> routePoints) {
-        this.routePoints = routePoints;
-    }
-
 // ------------------------ CANONICAL METHODS ------------------------
 
     @Override
@@ -182,6 +191,18 @@ public class Track {
     }
 
 // -------------------------- OTHER METHODS --------------------------
+
+    /**
+     * adds a RoutePoint, sets up the entity relationship and the internal sequence number.
+     *
+     * @param routePoint
+     *         the RoutePoint to add
+     */
+    public void addRoutePoint(RoutePoint routePoint) {
+        routePoint.setTrack(this);
+        routePoint.setSequence(routePoints.size() + 1);
+        routePoints.add(routePoint);
+    }
 
     /**
      * adds a WayPoint, sets up the entity relationship and the internal sequence number.
@@ -207,23 +228,6 @@ public class Track {
         wayPoints.add(wayPoint);
     }
 
-    /**
-     * adds a RoutePoint, sets up the entity relationship and the internal sequence number.
-     *
-     * @param routePoint
-     *         the RoutePoint to add
-     */
-    public void addRoutePoint(RoutePoint routePoint) {
-        routePoint.setTrack(this);
-        routePoint.setSequence(routePoints.size() + 1);
-        routePoints.add(routePoint);
-    }
-
-    @Column(name = "NAME", length = 255)
-    public String getName() {
-        return name.get();
-    }
-
     public SimpleStringProperty nameProperty() {
         return name;
     }
@@ -237,6 +241,27 @@ public class Track {
     public Optional<Extent> recalculateExtent() {
         extent = null;
         return getExtent();
+    }
+
+    /**
+     * gets the extent for the contained trackpoints. If the list of trackpoints is changed after the extent is
+     * calculated, the new extent must be calculated by calling recalculateExtent().
+     *
+     * @return the extent
+     */
+    @Transient
+    public Optional<Extent> getExtent() {
+        // extent can only be calculated when more than 2 points are available
+        if (null == extent) {
+            List<Coordinate> coordinates = trackPoints.stream().map(TrackPoint::getCoordinate).collect(Collectors
+                    .toList());
+            coordinates.addAll(routePoints.stream().map(RoutePoint::getCoordinate).collect(Collectors.toList()));
+            coordinates.addAll(wayPoints.stream().map(WayPoint::getCoordinate).collect(Collectors.toList()));
+            if (coordinates.size() >= 2) {
+                extent = Extent.forCoordinates(coordinates);
+            }
+        }
+        return Optional.ofNullable(extent);
     }
 
     public void setFilename(String filename) {

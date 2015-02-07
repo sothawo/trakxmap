@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -195,6 +196,7 @@ public class TrakxmapApp extends Application {
                         // store in db and trackList
                         db.ifPresent(d -> d.store(track));
                         trackList.add(track);
+                        sortTrackList();
                     }
                 }
             });
@@ -239,7 +241,10 @@ public class TrakxmapApp extends Application {
                         @Override
                         protected Void call() throws Exception {
                             List<Track> tracks = db.get().loadTracks();
-                            Platform.runLater(() -> trackList.addAll(tracks));
+                            Platform.runLater(() -> {
+                                trackList.addAll(tracks);
+                                sortTrackList();
+                            });
                             return null;
                         }
                     });
@@ -256,6 +261,39 @@ public class TrakxmapApp extends Application {
         });
         // send update task to the thread pool
         threadPool.submit(dbUpdateTask);
+    }
+
+    /**
+     * sorts the track list. default is the latest track first.
+     */
+    private void sortTrackList() {
+        Collections.sort(trackList, new Comparator<Track>() {
+            @Override
+            public int compare(Track t1, Track t2) {
+                int result;
+                Optional<LocalDateTime> optLatestTime1 = t1.getTimeInfo().getLatestTime();
+                Optional<LocalDateTime> optLatestTime2 = t2.getTimeInfo().getLatestTime();
+                if (optLatestTime1.isPresent()) {
+                    if (optLatestTime2.isPresent()) {
+                        // 1 is set, 2 is set
+                        result = optLatestTime2.get().compareTo(optLatestTime1.get());
+                    } else {
+                        // 1 is set, 2 not
+                        result = -1;
+                    }
+                } else {
+                    // 1 is not set
+                    if (optLatestTime2.isPresent()) {
+                        // 1 is not set, 2 is set
+                        result = 1;
+                    } else {
+                        // 1 is not set 2 is not set
+                        result = 0;
+                    }
+                }
+                return result;
+            }
+        });
     }
 
     /**
@@ -325,8 +363,8 @@ public class TrakxmapApp extends Application {
     }
 
     /**
-     * sets up and initializes the map view. the MapView object is stored in a field as it is needed in different 
-     * places of the application.
+     * sets up and initializes the map view. the MapView object is stored in a field as it is needed in different places
+     * of the application.
      */
     private void createMapView() {
         mapView = new MapView();
