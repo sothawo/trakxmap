@@ -30,3 +30,18 @@
     -fx-border-radius: 5px;
 }
 
+ /*
+ tracklist cells
+ */
+.tracklist-cell > .track-name {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.15em;
+}
+
+.tracklist-cell > .track-filename {
+    -fx-font-size: 0.95em;
+}
+
+.tracklist-cell > .track-timestamp {
+    -fx-font-size: 0.95em;
+}

@@ -16,7 +16,13 @@
 package com.sothawo.trakxmap.control;
 
 import com.sothawo.trakxmap.db.Track;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.layout.VBox;
+
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 
 /**
  * ListCell implementation for the Track List View.
@@ -24,16 +30,51 @@ import javafx.scene.control.ListCell;
  * @author P.J. Meisch (pj.meisch@sothawo.com).
  */
 public class TrackListCell extends ListCell<Track> {
+// ------------------------------ FIELDS ------------------------------
+
+    /**
+     * the dummy track is for the cells that are displayed to fill the space but contain no real tracks; by using this,
+     * the cell size looks better as the cells have a slightly alternating color
+     */
+    private static Track dummyTrack;
+
+// -------------------------- STATIC METHODS --------------------------
+
+    static {
+        dummyTrack = new Track(" ");
+        dummyTrack.setFilename(" ");
+    }
+
 // -------------------------- OTHER METHODS --------------------------
 
     @Override
     protected void updateItem(Track item, boolean empty) {
         super.updateItem(item, empty);
-        if (null == item || empty) {
-            setGraphic(null);
-            setText(null);
-        }else {
-            setText(item.getName());
-        }
+        setGraphic(buildItemForTrack((null == item || empty) ? dummyTrack : item));
+        setText(null);
+    }
+
+    /**
+     * create a Node containing the track's info to display in the list.
+     *
+     * @param track
+     *         thr track, may not be null
+     * @return the Node to display
+     */
+    private Node buildItemForTrack(Track track) {
+        VBox vbox = new VBox();
+        vbox.getStyleClass().add("tracklist-cell");
+        Label labelName = new Label(track.getName());
+        labelName.getStyleClass().add("track-name");
+        Label labelFilename = new Label(track.getFilename());
+        labelFilename.getStyleClass().add("track-filename");
+        vbox.getChildren().addAll(labelName, labelFilename);
+
+        track.getTimeInfo().getLatestTime().ifPresent(t -> {
+            Label labelTimestamp = new Label(t.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
+            labelTimestamp.getStyleClass().add("track-timestamp");
+            vbox.getChildren().add(labelTimestamp);
+        });
+        return vbox;
     }
 }
