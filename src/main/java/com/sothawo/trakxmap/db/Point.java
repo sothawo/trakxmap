@@ -161,7 +161,7 @@ public abstract class Point implements Serializable {
 // -------------------------- OTHER METHODS --------------------------
 
     /**
-     * gets lat/lon as coordinate object
+     * gets lat/lon as coordinate object for the MapView.
      *
      * @return coordinate
      */

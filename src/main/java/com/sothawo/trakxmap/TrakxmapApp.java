@@ -271,8 +271,8 @@ public class TrakxmapApp extends Application {
             @Override
             public int compare(Track t1, Track t2) {
                 int result;
-                Optional<LocalDateTime> optLatestTime1 = t1.getTimeInfo().getTrackTimestamp();
-                Optional<LocalDateTime> optLatestTime2 = t2.getTimeInfo().getTrackTimestamp();
+                Optional<LocalDateTime> optLatestTime1 = t1.getStatistics().getTrackTimestamp();
+                Optional<LocalDateTime> optLatestTime2 = t2.getStatistics().getTrackTimestamp();
                 if (optLatestTime1.isPresent()) {
                     if (optLatestTime2.isPresent()) {
                         // 1 is set, 2 is set

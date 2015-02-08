@@ -15,6 +15,7 @@
 */
 package com.sothawo.trakxmap.util;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -26,8 +27,10 @@ import java.util.Optional;
 public class TrackStatistics {
 // ------------------------------ FIELDS ------------------------------
 
-    /** hte timestamp of the first trackpoint in the track */
+    /** the timestamp of the first trackpoint in the track */
     private LocalDateTime trackStartTime;
+    /** the timestamp of the last trackpoint in the track */
+    private LocalDateTime trackEndTime;
     /** the timestamp of the first routepoint in the track */
     private LocalDateTime routeStartTime;
     /** the timestamp of the first waypoint in the track */
@@ -37,10 +40,12 @@ public class TrackStatistics {
 
     @Override
     public String toString() {
+        Optional<Duration> duration = getTrackDuration();
         return "TrackStatistics{" +
                 "trackStartTime=" + trackStartTime +
                 ", routeStartTime=" + routeStartTime +
                 ", firstWaypointTime=" + firstWaypointTime +
+                (duration.isPresent() ? (", duration=" + duration.toString()) : "") +
                 '}';
     }
 
@@ -59,14 +64,20 @@ public class TrackStatistics {
     }
 
     /**
-     * if this is the first trackpoint, the timestamp is kept otherwise it is ignored.
+     * if this is the first trackpoint, the timestamp is kept as starttime. If it is after the start time, it is kept as
+     * end time.
      *
      * @param localDateTime
      *         time to check
      */
     public void addTrackTime(LocalDateTime localDateTime) {
-        if (null != localDateTime && null == trackStartTime) {
-            trackStartTime = localDateTime;
+        if (null != localDateTime) {
+            if (null == trackStartTime) {
+                trackStartTime = localDateTime;
+            }
+            if (null == trackEndTime || localDateTime.isAfter(trackEndTime)) {
+                trackEndTime = localDateTime;
+            }
         }
     }
 
@@ -83,8 +94,21 @@ public class TrackStatistics {
     }
 
     /**
+     * get the duration of this track. Only defined if trackStartTime and trackEndTime are set
+     *
+     * @return optional duration
+     */
+    public Optional<Duration> getTrackDuration() {
+        Duration duration = null;
+        if (null != trackStartTime && null != trackEndTime) {
+            duration = Duration.between(trackStartTime, trackEndTime);
+        }
+        return Optional.ofNullable(duration);
+    }
+
+    /**
      * returns the latest LocalDateTime for this track. I a track start time is set, this is returned. Otherwise if a
-     *  first waypoint time is set, this is returned. Otherwise the routeStartTime is returned if set.
+     * first waypoint time is set, this is returned. Otherwise the routeStartTime is returned if set.
      *
      * @return an optional LocalDateTime
      */

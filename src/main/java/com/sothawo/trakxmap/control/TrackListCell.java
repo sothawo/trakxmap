@@ -16,11 +16,13 @@
 package com.sothawo.trakxmap.control;
 
 import com.sothawo.trakxmap.db.Track;
+import com.sothawo.trakxmap.util.TrackStatistics;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.VBox;
 
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 
@@ -71,11 +73,30 @@ public class TrackListCell extends ListCell<Track> {
         labelFilename.getStyleClass().add("track-filename");
         vbox.getChildren().addAll(labelName, labelFilename);
 
-        track.getTimeInfo().getTrackTimestamp().ifPresent(t -> {
-            Label labelTimestamp = new Label(t.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
+        TrackStatistics statistics = track.getStatistics();
+        statistics.getTrackTimestamp().ifPresent(t -> {
+            String dateTime = t.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM));
+
+            String duration = "";
+            if(statistics.getTrackDuration().isPresent()) {
+                Duration d = statistics.getTrackDuration().get();
+                long hours = d.toHours();
+                d = d.minusHours(hours);
+                long minutes = d.toMinutes();
+                d = d.minusMinutes(minutes);
+                long seconds = d.getSeconds();
+                if (hours > 0) {
+                    duration = String.format(" %d:%02d:%02d", hours, minutes, seconds);
+                }else {
+                    duration = String.format(" %d:%02d", minutes, seconds);
+                }
+            }
+
+            Label labelTimestamp = new Label(dateTime + duration);
             labelTimestamp.getStyleClass().add("track-timestamp");
             vbox.getChildren().add(labelTimestamp);
         });
+
         return vbox;
     }
 }

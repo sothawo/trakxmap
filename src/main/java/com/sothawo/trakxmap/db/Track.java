@@ -66,7 +66,7 @@ public class Track {
     private CoordinateLine routeLine = null;
 
     /** the time info for the track */
-    private TrackStatistics timeInfo = null;
+    private TrackStatistics statistics = null;
 
 // --------------------------- CONSTRUCTORS ---------------------------
 
@@ -121,20 +121,20 @@ public class Track {
     }
 
     /**
-     * gets the lazy evaluated TrackTimeInfo
+     * gets the lazy evaluated TrackStatistics.
      *
-     * @return TrackTimeInfo object
+     * @return TrackStatistics object
      */
     @Transient
-    public TrackStatistics getTimeInfo() {
-        if (null == timeInfo) {
-            timeInfo = new TrackStatistics();
-            trackPoints.stream().map(Point::getTimestamp).forEach(timeInfo::addTrackTime);
-            routePoints.stream().map(Point::getTimestamp).forEach(timeInfo::addRouteTime);
-            wayPoints.stream().map(Point::getTimestamp).forEach(timeInfo::addWaypointTime);
-            logger.debug("track {}, timestamp: {}", getName(), timeInfo.toString());
+    public TrackStatistics getStatistics() {
+        if (null == statistics) {
+            statistics = new TrackStatistics();
+            trackPoints.stream().map(Point::getTimestamp).forEach(statistics::addTrackTime);
+            routePoints.stream().map(Point::getTimestamp).forEach(statistics::addRouteTime);
+            wayPoints.stream().map(Point::getTimestamp).forEach(statistics::addWaypointTime);
+            logger.debug("track {}, timestamp: {}", getName(), statistics.toString());
         }
-        return timeInfo;
+        return statistics;
     }
 
     @Column(name = "NAME", length = 255)
