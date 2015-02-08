@@ -20,7 +20,7 @@ import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.Extent;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PathTools;
-import com.sothawo.trakxmap.util.TrackTimeInfo;
+import com.sothawo.trakxmap.util.TrackStatistics;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.paint.Color;
 import org.slf4j.Logger;
@@ -66,7 +66,7 @@ public class Track {
     private CoordinateLine routeLine = null;
 
     /** the time info for the track */
-    private TrackTimeInfo timeInfo = null;
+    private TrackStatistics timeInfo = null;
 
 // --------------------------- CONSTRUCTORS ---------------------------
 
@@ -126,9 +126,9 @@ public class Track {
      * @return TrackTimeInfo object
      */
     @Transient
-    public TrackTimeInfo getTimeInfo() {
+    public TrackStatistics getTimeInfo() {
         if (null == timeInfo) {
-            timeInfo = new TrackTimeInfo();
+            timeInfo = new TrackStatistics();
             trackPoints.stream().map(Point::getTimestamp).forEach(timeInfo::addTrackTime);
             routePoints.stream().map(Point::getTimestamp).forEach(timeInfo::addRouteTime);
             wayPoints.stream().map(Point::getTimestamp).forEach(timeInfo::addWaypointTime);

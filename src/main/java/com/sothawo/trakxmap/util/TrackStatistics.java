@@ -19,78 +19,81 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
- * An object encapsulating the different time informations of a track.
+ * An object with several statistical informations about a track.
  *
  * @author P.J.Meisch (pj.meisch@jaroso.de)
  */
-public class TrackTimeInfo {
+public class TrackStatistics {
 // ------------------------------ FIELDS ------------------------------
 
-    private LocalDateTime latestTrackTime;
-    private LocalDateTime latestRouteTime;
-    private LocalDateTime latestWaypointTime;
+    /** hte timestamp of the first trackpoint in the track */
+    private LocalDateTime trackStartTime;
+    /** the timestamp of the first routepoint in the track */
+    private LocalDateTime routeStartTime;
+    /** the timestamp of the first waypoint in the track */
+    private LocalDateTime firstWaypointTime;
 
 // ------------------------ CANONICAL METHODS ------------------------
 
     @Override
     public String toString() {
-        return "TrackTimeInfo{" +
-                "latestTrackTime=" + latestTrackTime +
-                ", latestRouteTime=" + latestRouteTime +
-                ", latestWaypointTime=" + latestWaypointTime +
+        return "TrackStatistics{" +
+                "trackStartTime=" + trackStartTime +
+                ", routeStartTime=" + routeStartTime +
+                ", firstWaypointTime=" + firstWaypointTime +
                 '}';
     }
 
 // -------------------------- OTHER METHODS --------------------------
 
     /**
-     * checks if the given time is after the already seen latest route time. If so, th given time ist stored
+     * if this is the first route timstamp it is kept, otherwise ignored.
      *
      * @param localDateTime
      *         time to check
      */
     public void addRouteTime(LocalDateTime localDateTime) {
-        if (null != localDateTime && (null == latestRouteTime || localDateTime.isAfter(latestRouteTime))) {
-            latestRouteTime = localDateTime;
+        if (null != localDateTime && null == routeStartTime) {
+            routeStartTime = localDateTime;
         }
     }
 
     /**
-     * checks if the given time is after the already seen latest track time. If so, th given time ist stored
+     * if this is the first trackpoint, the timestamp is kept otherwise it is ignored.
      *
      * @param localDateTime
      *         time to check
      */
     public void addTrackTime(LocalDateTime localDateTime) {
-        if (null != localDateTime && (null == latestTrackTime || localDateTime.isAfter(latestTrackTime))) {
-            latestTrackTime = localDateTime;
+        if (null != localDateTime && null == trackStartTime) {
+            trackStartTime = localDateTime;
         }
     }
 
     /**
-     * checks if the given time is after the already seen latest waypoint time. If so, th given time ist stored
+     * if this is the first waypoint timestamp it is kept, otherwise ignored
      *
      * @param localDateTime
      *         time to check
      */
     public void addWaypointTime(LocalDateTime localDateTime) {
-        if (null != localDateTime && (null == latestWaypointTime || localDateTime.isAfter(latestWaypointTime))) {
-            latestWaypointTime = localDateTime;
+        if (null != localDateTime && null == firstWaypointTime) {
+            firstWaypointTime = localDateTime;
         }
     }
 
     /**
-     * returns the latest LocalDateTime for this track. I a latest track time is set, this is returned. Otherwise if a
-     * latest waypoint time is set, this is returned. Otherwise the latest Waypoint time is returned.
+     * returns the latest LocalDateTime for this track. I a track start time is set, this is returned. Otherwise if a
+     *  first waypoint time is set, this is returned. Otherwise the routeStartTime is returned if set.
      *
      * @return an optional LocalDateTime
      */
-    public Optional<LocalDateTime> getLatestTime() {
-        Optional<LocalDateTime> oTime = Optional.ofNullable(latestTrackTime);
+    public Optional<LocalDateTime> getTrackTimestamp() {
+        Optional<LocalDateTime> oTime = Optional.ofNullable(trackStartTime);
         if (!oTime.isPresent()) {
-            oTime = Optional.ofNullable(latestRouteTime);
+            oTime = Optional.ofNullable(firstWaypointTime);
             if (!oTime.isPresent()) {
-                oTime = Optional.ofNullable(latestWaypointTime);
+                oTime = Optional.ofNullable(routeStartTime);
             }
         }
         return oTime;

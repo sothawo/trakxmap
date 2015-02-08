@@ -34,7 +34,8 @@ public class TrackListCell extends ListCell<Track> {
 
     /**
      * the dummy track is for the cells that are displayed to fill the space but contain no real tracks; by using this,
-     * the cell size looks better as the cells have a slightly alternating color
+     * the cell size looks better as the cells have a slightly alternating color and empty cells are displayed to the
+     * bottom of the list.
      */
     private static Track dummyTrack;
 
@@ -70,7 +71,7 @@ public class TrackListCell extends ListCell<Track> {
         labelFilename.getStyleClass().add("track-filename");
         vbox.getChildren().addAll(labelName, labelFilename);
 
-        track.getTimeInfo().getLatestTime().ifPresent(t -> {
+        track.getTimeInfo().getTrackTimestamp().ifPresent(t -> {
             Label labelTimestamp = new Label(t.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
             labelTimestamp.getStyleClass().add("track-timestamp");
             vbox.getChildren().add(labelTimestamp);
