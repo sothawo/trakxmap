@@ -64,6 +64,7 @@ public class I18N {
     public static final String LOG_DB_UPDATE_ERROR = "log.db.update.error";
     public static final String LOG_DB_INIT_FINISHED = "log.db.init.finished";
     public static final String LOG_STOP_PROGRAM = "log.stop.program";
+    public static final String LABEL_TRACKLISTCELL_TIMESTAMP = "label.tracklistcell.timestamp";
 
     private static final Logger logger = LoggerFactory.getLogger(I18N.class);
     private static final ObjectProperty<Locale> locale;
@@ -102,24 +103,28 @@ public class I18N {
      *
      * @param key
      *         ResourceBundle key
+     * @param args
+     *         optional arguments for the message
      * @return Label
      */
-    public static Label labelForKey(final String key) {
+    public static Label labelForKey(final String key, final Object... args) {
         Label label = new Label();
-        label.textProperty().bind(getStringBinding(key));
+        label.textProperty().bind(getStringBinding(key, args));
         return label;
     }
 
     /**
-     * creates a bound Label for the given resourcebundle key
+     * creates a bound Tooltip for the given resourcebundle key
      *
      * @param key
      *         ResourceBundle key
+     * @param args
+     *         optional arguments for the message
      * @return Label
      */
-    public static Tooltip tooltipForKey(final String key) {
+    public static Tooltip tooltipForKey(final String key, final Object... args) {
         Tooltip tooltip = new Tooltip();
-        tooltip.textProperty().bind(getStringBinding(key));
+        tooltip.textProperty().bind(getStringBinding(key, args));
         return tooltip;
     }
 
@@ -128,13 +133,25 @@ public class I18N {
      *
      * @param key
      *         key
+     * @param args
+     *         optional arguments for the message
      * @return String binding
      */
-    public static StringBinding getStringBinding(String key) {
-        return Bindings.createStringBinding(() -> get(key), locale);
+    public static StringBinding getStringBinding(final String key, final Object... args) {
+        return Bindings.createStringBinding(() -> get(key, args), locale);
     }
 
-    public static String get(String key, Object... args) {
+    /**
+     * gets the string with the given key from the resource bundle for the current locale and uses it as first argument
+     * to MessageFormat.foramt, passing in the optional args and returning the result.
+     *
+     * @param key
+     *         message key
+     * @param args
+     *         optional arguments for the message
+     * @return localized formatted string
+     */
+    public static String get(final String key, final Object... args) {
         ResourceBundle bundle = ResourceBundle.getBundle("messages", getLocale());
         return MessageFormat.format(bundle.getString(key), args);
     }

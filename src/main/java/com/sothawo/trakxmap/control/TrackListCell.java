@@ -16,6 +16,7 @@
 package com.sothawo.trakxmap.control;
 
 import com.sothawo.trakxmap.db.Track;
+import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.TrackStatistics;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -92,7 +93,8 @@ public class TrackListCell extends ListCell<Track> {
                 }
             }
 
-            Label labelTimestamp = new Label(dateTime + duration);
+            // TODO: add 18n labels for the fields
+            Label labelTimestamp =  I18N.labelForKey(I18N.LABEL_TRACKLISTCELL_TIMESTAMP, dateTime, duration);
             labelTimestamp.getStyleClass().add("track-timestamp");
             vbox.getChildren().add(labelTimestamp);
         });
