@@ -38,9 +38,10 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ## version history
 
-### 0.3.1-SNAPSHOT
+### 0.3.1
 
-* track list is ordered, latest terack at top
+* additional track info in the track list view
+* track list is ordered, latest track at top
 
 ### 0.3.0.
 
