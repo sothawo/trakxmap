@@ -20,6 +20,7 @@ import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,13 +60,16 @@ public class I18N {
     public static final String TOOLTIP_SWITCH_MAPTYPE = "tooltip.switch.maptype";
     public static final String TRACK_NAME_DEFAULT = "track.name.default";
     public static final String ERROR_LOADING_TRACK = "error.loading.track";
+    public static final String ERROR_DELETING_TRACK = "error.deleting.track";
     public static final String ERROR_NO_TRACKLOADER_FOR_FILE = "error.no.trackloader.for.file";
     public static final String LOG_DB_UPDATE_NECESSARY = "log.db.update.necessary";
     public static final String LOG_DB_UPDATE_ERROR = "log.db.update.error";
     public static final String LOG_DB_INIT_FINISHED = "log.db.init.finished";
     public static final String LOG_STOP_PROGRAM = "log.stop.program";
     public static final String LABEL_TRACKLISTCELL_TIMESTAMP = "label.tracklistcell.timestamp";
+    public static final String LOG_DELETE_TRACK = "log.delete.track";
 
+    public static final String CONTEXT_MENU_DELETE_TRACK = "context.menu.delete.track";
     private static final Logger logger = LoggerFactory.getLogger(I18N.class);
     private static final ObjectProperty<Locale> locale;
 
@@ -126,6 +130,21 @@ public class I18N {
         Tooltip tooltip = new Tooltip();
         tooltip.textProperty().bind(getStringBinding(key, args));
         return tooltip;
+    }
+
+    /**
+     * creates a bound MenuItem for the given resourcebundle key
+     *
+     * @param key
+     *         ResourceBundle key
+     * @param args
+     *         optional arguments for the message
+     * @return Label
+     */
+    public static MenuItem menuItemForKey(final String key, final Object... args) {
+        MenuItem menuItem = new MenuItem();
+        menuItem.textProperty().bind(getStringBinding(key, args));
+        return menuItem;
     }
 
     /**

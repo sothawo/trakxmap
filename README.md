@@ -38,6 +38,10 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ## version history
 
+### 0.3.2-SNAPSHOT
+
+* tracks can be deleted by using the context menu
+
 ### 0.3.1
 
 * additional track info in the track list view

@@ -93,7 +93,6 @@ public class TrackListCell extends ListCell<Track> {
                 }
             }
 
-            // TODO: add 18n labels for the fields
             Label labelTimestamp =  I18N.labelForKey(I18N.LABEL_TRACKLISTCELL_TIMESTAMP, dateTime, duration);
             labelTimestamp.getStyleClass().add("track-timestamp");
             vbox.getChildren().add(labelTimestamp);

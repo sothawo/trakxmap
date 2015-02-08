@@ -479,7 +479,7 @@ public class TrakxmapApp extends Application {
     }
 
     /**
-     * creates the node containing the track list
+     * creates the node containing the track list.
      *
      * @return Node
      */
@@ -490,7 +490,21 @@ public class TrakxmapApp extends Application {
         titledPane.textProperty().bind(I18N.getStringBinding(I18N.LABEL_TITLE_TRACKLIST));
 
         ListView<Track> trackListView = new ListView<>(trackList);
-        trackListView.setCellFactory((listView -> new TrackListCell()));
+
+        // Create a MenuItem and place it in a ContextMenu
+        MenuItem menuItemDelete = I18N.menuItemForKey(I18N.CONTEXT_MENU_DELETE_TRACK);
+        ContextMenu contextMenu = new ContextMenu(menuItemDelete);
+        menuItemDelete.setOnAction(evt -> Optional.ofNullable(trackListView.getSelectionModel().getSelectedItem())
+                .ifPresent(track -> {
+                    trackListView.getSelectionModel().select(null);
+                    deleteTrack(track);
+                }));
+
+        trackListView.setCellFactory((listView -> {
+            TrackListCell listCell = new TrackListCell();
+            listCell.setContextMenu(contextMenu);
+            return listCell;
+        }));
         trackListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
         trackListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -507,6 +521,23 @@ public class TrakxmapApp extends Application {
 
         titledPane.setContent(anchorPane);
         return titledPane;
+    }
+
+    /**
+     * deletes the given track from the database and the listview
+     *
+     * @param track
+     *         the track to delete
+     */
+    private void deleteTrack(Track track) {
+        // TODO: confirm deletion
+        logger.info(I18N.get(I18N.LOG_DELETE_TRACK, track));
+        db.ifPresent(d -> {
+            Optional<Failure> optFailure = d.deleteTrack(track);
+            if (!optFailure.isPresent()) {
+                trackList.remove(track);
+            }
+        });
     }
 
     /**

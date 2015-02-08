@@ -84,7 +84,44 @@ public class DB implements AutoCloseable {
         emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, props);
     }
 
-// --------------------- GETTER / SETTER METHODS ---------------------
+// ------------------------ INTERFACE METHODS ------------------------
+
+
+// --------------------- Interface AutoCloseable ---------------------
+
+    @Override
+    public void close() {
+        try {
+            if (null != emf) {
+                emf.close();
+            }
+        } catch (RuntimeException e) {
+            logger.warn("DB", e);
+        }
+    }
+
+// -------------------------- OTHER METHODS --------------------------
+
+    /**
+     * deletes a track from the database
+     * @param track the track to delete
+     *              @return optional failure
+     */
+    public Optional<Failure> deleteTrack(Track track) {
+        try {
+            EntityManager em = emf.createEntityManager();
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
+            // remove the merged instance, not the argument
+            em.remove(em.merge(track));
+            tx.commit();
+            em.close();
+        } catch (IllegalStateException | IllegalArgumentException | PersistenceException e) {
+            logger.error(I18N.get(I18N.ERROR_DELETING_TRACK), e);
+            return Optional.of(new Failure("store", e));
+        }
+        return Optional.empty();
+    }
 
     /**
      * loads the tracks from the database
@@ -105,24 +142,6 @@ public class DB implements AutoCloseable {
         return tracks;
     }
 
-// ------------------------ INTERFACE METHODS ------------------------
-
-
-// --------------------- Interface AutoCloseable ---------------------
-
-    @Override
-    public void close() {
-        try {
-            if (null != emf) {
-                emf.close();
-            }
-        } catch (RuntimeException e) {
-            logger.warn("DB", e);
-        }
-    }
-
-// -------------------------- OTHER METHODS --------------------------
-
     /**
      * stores a track in the database
      *
@@ -138,7 +157,7 @@ public class DB implements AutoCloseable {
                 em.persist(track);
                 tx.commit();
                 em.close();
-            } catch (IllegalStateException e) {
+            } catch (IllegalStateException | IllegalArgumentException | PersistenceException e) {
                 return Optional.of(new Failure("store", e));
             }
         }
