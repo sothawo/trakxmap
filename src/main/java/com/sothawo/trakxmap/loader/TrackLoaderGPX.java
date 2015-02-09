@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package com.sothawo.trakxmap.track;
+package com.sothawo.trakxmap.loader;
 
 import com.sothawo.trakxmap.db.RoutePoint;
 import com.sothawo.trakxmap.db.Track;

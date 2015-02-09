@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,11 +40,9 @@ import java.util.stream.Collectors;
  */
 @Entity
 @Table(name = "TRACK")
-public class Track {
+public class Track implements Serializable {
 // ------------------------------ FIELDS ------------------------------
 
-    /** Logger */
-    private final static Logger logger = LoggerFactory.getLogger(Track.class);
     /** db id of the track */
     private Long id;
     /** the filename where the track was loaded from (without path) */
@@ -132,7 +131,6 @@ public class Track {
             trackPoints.stream().map(Point::getTimestamp).forEach(statistics::addTrackTime);
             routePoints.stream().map(Point::getTimestamp).forEach(statistics::addRouteTime);
             wayPoints.stream().map(Point::getTimestamp).forEach(statistics::addWaypointTime);
-            logger.debug("track {}, timestamp: {}", getName(), statistics.toString());
         }
         return statistics;
     }

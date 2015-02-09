@@ -15,7 +15,7 @@
 */
 package com.sothawo.trakxmap;
 
-import com.sothawo.trakxmap.track.TrackLoaderGPX;
+import com.sothawo.trakxmap.loader.TrackLoaderGPX;
 
 import java.io.File;
 import java.io.IOException;
