@@ -15,6 +15,7 @@
 */
 package com.sothawo.trakxmap.db;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
@@ -27,6 +28,11 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "TRACKPOINT")
 public final class TrackPoint extends Point {
+// ------------------------------ FIELDS ------------------------------
+
+    /** distance from the beginning of the track in meters */
+    private Double distance;
+
 // --------------------------- CONSTRUCTORS ---------------------------
 
     public TrackPoint() {
@@ -35,6 +41,17 @@ public final class TrackPoint extends Point {
 
     public TrackPoint(Double latitude, Double longitude, Double elevation, LocalDateTime timestamp) {
         super(latitude, longitude, elevation, timestamp);
+    }
+
+// --------------------- GETTER / SETTER METHODS ---------------------
+
+    @Column(name = "DISTANCE", nullable = true)
+    public Double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(Double distance) {
+        this.distance = distance;
     }
 
 // ------------------------ CANONICAL METHODS ------------------------

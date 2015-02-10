@@ -104,8 +104,10 @@ public class DB implements AutoCloseable {
 
     /**
      * deletes a track from the database
-     * @param track the track to delete
-     *              @return optional failure
+     *
+     * @param track
+     *         the track to delete
+     * @return optional failure
      */
     public Optional<Failure> deleteTrack(Track track) {
         try {
@@ -124,22 +126,44 @@ public class DB implements AutoCloseable {
     }
 
     /**
-     * loads the tracks from the database
+     * loads the ids of all tracks from the database
      *
      * @return List of track, may be emtpy but not null
      */
-    public List<Track> loadTracks() {
-        List<Track> tracks = new ArrayList<>();
+    public List<Long> loadTrackIds() {
+        List<Long> ids = new ArrayList<>();
         logger.debug(I18N.get(I18N.LOG_LOADING_TRACKS));
         try {
             EntityManager em = emf.createEntityManager();
-            List<Track> resultList = em.createQuery("select t from Track t", Track.class).getResultList();
-            tracks.addAll(resultList);
+            List<Long> resultList = em.createQuery("select t.id from Track t", Long.class).getResultList();
+            ids.addAll(resultList);
             em.close();
         } catch (IllegalStateException | IllegalArgumentException | PersistenceException e) {
             logger.error(I18N.get(I18N.ERROR_LOADING_TRACK), e);
         }
-        return tracks;
+        return ids;
+    }
+
+    /**
+     * loads the track with the given id from the database
+     *
+     * @param id
+     *         track id
+     * @return Track if found
+     */
+    public Optional<Track> loadTrackWithId(final Long id) {
+        Track track = null;
+        logger.debug(I18N.get(I18N.LOG_LOADING_TRACK, id));
+        try {
+            EntityManager em = emf.createEntityManager();
+            track = em.createQuery("select t from Track t where id = :id", Track.class).setParameter("id", id)
+                    .getSingleResult();
+            em.close();
+            // TODO: calculate trackpoint distances when not yet in database
+        } catch (IllegalStateException | IllegalArgumentException | PersistenceException e) {
+            logger.error(I18N.get(I18N.ERROR_LOADING_TRACK), e);
+        }
+        return Optional.ofNullable(track);
     }
 
     /**

@@ -236,15 +236,23 @@ public class TrakxmapApp extends Application {
                 // no failure, create DB connector and fire off track selection
                 if (!failure.isPresent()) {
                     db = Optional.of(new DB());
-                    // fire off a task to load the tracks from the db
+                    // fire off a task to load the track ids from the db and that in turn starts tasks to load the
+                    // tracks
                     threadPool.submit(new Task<Void>() {
                         @Override
                         protected Void call() throws Exception {
-                            List<Track> tracks = db.get().loadTracks();
-                            Platform.runLater(() -> {
-                                trackList.addAll(tracks);
-                                sortTrackList();
-                            });
+                            // for every Id fire off a Task to load the track
+                            db.get().loadTrackIds().stream().forEach(id -> threadPool.submit(new Task<Void>() {
+                                @Override
+                                protected Void call() throws Exception {
+                                    db.get().loadTrackWithId(id).ifPresent(t -> Platform.runLater(() -> {
+                                                trackList.add(t);
+                                                sortTrackList();
+                                            })
+                                    );
+                                    return null;
+                                }
+                            }));
                             return null;
                         }
                     });

@@ -130,4 +130,14 @@
                                  referencedTableName="TRACK" referencedColumnNames="ID"
                                  onDelete="CASCADE" onUpdate="CASCADE"/>
     </changeSet>
+
+    <changeSet id="5" author="pj.meisch@sothawo.com">
+        <comment>add DISTANCE to TRACKPOINT</comment>
+        <addColumn tableName="TRACKPOINT">
+            <column name="DISTANCE" type="double">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
