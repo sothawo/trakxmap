@@ -40,6 +40,7 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ### 0.3.2-SNAPSHOT
 
+* trackpoints contain information about the distance in meters to the track's start
 * tracks can be deleted by using the context menu
 
 ### 0.3.1

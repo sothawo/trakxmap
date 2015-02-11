@@ -16,6 +16,7 @@
 package com.sothawo.trakxmap.db;
 
 import com.sothawo.trakxmap.util.Failure;
+import com.sothawo.trakxmap.util.Geo;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PathTools;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -152,18 +153,29 @@ public class DB implements AutoCloseable {
      * @return Track if found
      */
     public Optional<Track> loadTrackWithId(final Long id) {
-        Track track = null;
+        Optional<Track> optionalTrack = Optional.empty();
         logger.debug(I18N.get(I18N.LOG_LOADING_TRACK, id));
         try {
             EntityManager em = emf.createEntityManager();
-            track = em.createQuery("select t from Track t where id = :id", Track.class).setParameter("id", id)
-                    .getSingleResult();
+            optionalTrack = Optional.ofNullable(
+                    em.createQuery("select t from Track t where id = :id", Track.class).setParameter("id", id)
+                            .getSingleResult());
+            optionalTrack.ifPresent(track -> {
+                // calculate trackpoint distances when not yet in database
+                List<TrackPoint> trackPoints = track.getTrackPoints();
+                if (null != trackPoints && 0 != trackPoints.size() && null == trackPoints.get(0).getDistance()) {
+                    // Wrap it in a transaction to have the changes stored in the db
+                    EntityTransaction tx = em.getTransaction();
+                    tx.begin();
+                    Geo.updateTrackDistances(track);
+                    tx.commit();
+                }
+            });
             em.close();
-            // TODO: calculate trackpoint distances when not yet in database
         } catch (IllegalStateException | IllegalArgumentException | PersistenceException e) {
             logger.error(I18N.get(I18N.ERROR_LOADING_TRACK), e);
         }
-        return Optional.ofNullable(track);
+        return optionalTrack;
     }
 
     /**

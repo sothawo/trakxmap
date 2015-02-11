@@ -26,6 +26,7 @@ import com.sothawo.trakxmap.db.Track;
 import com.sothawo.trakxmap.loader.TrackLoader;
 import com.sothawo.trakxmap.loader.TrackLoaderGPX;
 import com.sothawo.trakxmap.util.Failure;
+import com.sothawo.trakxmap.util.Geo;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PreferencesBindings;
 import com.typesafe.config.Config;
@@ -193,6 +194,7 @@ public class TrakxmapApp extends Application {
                 if (null != newValue) {
                     if (newValue.isPresent()) {
                         Track track = newValue.get();
+                        Geo.updateTrackDistances(track);
                         // store in db and trackList
                         db.ifPresent(d -> d.store(track));
                         trackList.add(track);
