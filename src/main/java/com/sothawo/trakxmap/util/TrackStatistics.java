@@ -35,6 +35,8 @@ public class TrackStatistics {
     private LocalDateTime routeStartTime;
     /** the timestamp of the first waypoint in the track */
     private LocalDateTime firstWaypointTime;
+    /** the track's distance */
+    private Double trackDistance;
 
 // ------------------------ CANONICAL METHODS ------------------------
 
@@ -47,6 +49,19 @@ public class TrackStatistics {
                 ", firstWaypointTime=" + firstWaypointTime +
                 (duration.isPresent() ? (", duration=" + duration.toString()) : "") +
                 '}';
+    }
+
+    /**
+     * get the duration of this track. Only defined if trackStartTime and trackEndTime are set
+     *
+     * @return optional duration
+     */
+    public Optional<Duration> getTrackDuration() {
+        Duration duration = null;
+        if (null != trackStartTime && null != trackEndTime) {
+            duration = Duration.between(trackStartTime, trackEndTime);
+        }
+        return Optional.ofNullable(duration);
     }
 
 // -------------------------- OTHER METHODS --------------------------
@@ -64,7 +79,8 @@ public class TrackStatistics {
     }
 
     /**
-     * if this is the first trackpoint, the timestamp is kept as starttime. If it is after the start time, it is kept as
+     * if this is the first trackpoint, the timestamp is kept as starttime. If it is after the start time, it is kept
+     * as
      * end time.
      *
      * @param localDateTime
@@ -94,16 +110,25 @@ public class TrackStatistics {
     }
 
     /**
-     * get the duration of this track. Only defined if trackStartTime and trackEndTime are set
+     * adds a given distance to the track's distance.
      *
-     * @return optional duration
+     * @param distance
+     *         the distance to add
      */
-    public Optional<Duration> getTrackDuration() {
-        Duration duration = null;
-        if (null != trackStartTime && null != trackEndTime) {
-            duration = Duration.between(trackStartTime, trackEndTime);
+    public void adddTrackpointDistance(Double distance) {
+        if (null != distance) {
+            // distance is accumulated from track start
+            trackDistance = distance;
         }
-        return Optional.ofNullable(duration);
+    }
+
+    /**
+     * get the track's distance
+     *
+     * @return distance if set
+     */
+    public Optional<Double> getTrackDistance() {
+        return Optional.ofNullable(trackDistance);
     }
 
     /**

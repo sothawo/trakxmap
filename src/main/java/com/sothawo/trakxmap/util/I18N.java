@@ -66,7 +66,7 @@ public class I18N {
     public static final String LOG_DB_UPDATE_ERROR = "log.db.update.error";
     public static final String LOG_DB_INIT_FINISHED = "log.db.init.finished";
     public static final String LOG_STOP_PROGRAM = "log.stop.program";
-    public static final String LABEL_TRACKLISTCELL_TIMESTAMP = "label.tracklistcell.timestamp";
+    public static final String LABEL_TRACKLISTCELL_DURATIONLENGTH = "label.tracklistcell.durationLength";
     public static final String LOG_DELETE_TRACK = "log.delete.track";
 
     public static final String CONTEXT_MENU_DELETE_TRACK = "context.menu.delete.track";

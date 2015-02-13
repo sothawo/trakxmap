@@ -33,15 +33,12 @@
  /*
  tracklist cells
  */
-.tracklist-cell > .track-name {
+.tracklist-cell > .tracklist-cell-primary {
     -fx-font-weight: bold;
     -fx-font-size: 1.15em;
 }
 
-.tracklist-cell > .track-filename {
+.tracklist-cell > .tracklist-cell-secondary {
     -fx-font-size: 0.95em;
 }
 
-.tracklist-cell > .track-timestamp {
-    -fx-font-size: 0.95em;
-}
