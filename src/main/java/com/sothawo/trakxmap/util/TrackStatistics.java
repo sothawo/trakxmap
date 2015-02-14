@@ -193,4 +193,22 @@ public class TrackStatistics {
         }
         return oTime;
     }
+
+    /**
+     * get the minimum elevation.
+     *
+     * @return minium elevation if set
+     */
+    public Optional<Double> getMinElevation() {
+        return Optional.ofNullable(minElevation);
+    }
+
+    /**
+     * get the maximum elevation.
+     *
+     * @return maximum elevation if set
+     */
+    public Optional<Double> getMaxElevation() {
+        return Optional.ofNullable(maxElevation);
+    }
 }

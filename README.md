@@ -40,6 +40,7 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ### 0.3.2-SNAPSHOT
 
+* track elevation data is display below the map
 * track info in the list view now contains name, timestamp, length and duration
 * trackpoints contain information about the distance in meters to the track's start
 * tracks can be deleted by using the context menu

@@ -23,6 +23,7 @@ import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.db.DB;
 import com.sothawo.trakxmap.db.DatabaseUpdateTask;
 import com.sothawo.trakxmap.db.Track;
+import com.sothawo.trakxmap.db.TrackPoint;
 import com.sothawo.trakxmap.loader.TrackLoader;
 import com.sothawo.trakxmap.loader.TrackLoaderGPX;
 import com.sothawo.trakxmap.util.Failure;
@@ -42,6 +43,9 @@ import javafx.concurrent.Worker;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.chart.AreaChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
@@ -105,8 +109,11 @@ public class TrakxmapApp extends Application {
     /** Flag wether the database update is finished */
     private AtomicBoolean dbUpdateFinished = new AtomicBoolean(false);
 
-    /** the dtabase connector object */
+    /** the database connector object */
     private Optional<DB> db = Optional.empty();
+
+    /** elevation chart object */
+    private AreaChart<Number, Number> elevationChart;
 
 // -------------------------- STATIC METHODS --------------------------
 
@@ -342,9 +349,7 @@ public class TrakxmapApp extends Application {
         // initialize the loadTrackFiles view
         splitPane1.getItems().add(createTracksViewNode());
 
-        Label label = I18N.labelForKey(I18N.LABEL_DUMMY_ELEVATION);
-        label.setMinHeight(100.0);
-        splitPane2.getItems().add(label);
+        splitPane2.getItems().add(createElevationViewNode());
 
         splitPane1.getItems().add(splitPane2);
 
@@ -373,7 +378,28 @@ public class TrakxmapApp extends Application {
     }
 
     /**
-     * sets up and initializes the map view. the MapView object is stored in a field as it is needed in different places
+     * creates the Node that contans the elevation data.
+     *
+     * @return
+     */
+    private Node createElevationViewNode() {
+        // in front of the label is the chart
+        NumberAxis xAxis = new NumberAxis();
+        xAxis.setForceZeroInRange(false);
+        xAxis.setAnimated(false);
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setForceZeroInRange(false);
+        yAxis.setAnimated(false);
+        elevationChart = new AreaChart<>(xAxis, yAxis);
+        elevationChart.setCreateSymbols(false);
+        // if the chart is set to animated, we get error message son the console when adding data
+        elevationChart.setAnimated(false);
+        return elevationChart;
+    }
+
+    /**
+     * sets up and initializes the map view. the MapView object is stored in a field as it is needed in different
+     * places
      * of the application.
      */
     private void createMapView() {
@@ -551,7 +577,8 @@ public class TrakxmapApp extends Application {
     }
 
     /**
-     * hides the old track from the map, show the new track and zooms to the new track's extent
+     * hides the old track from the map, show the new track and zooms to the new track's extent, update the elevation
+     * chart.
      *
      * @param oldTrack
      *         the old track if any
@@ -574,6 +601,28 @@ public class TrakxmapApp extends Application {
 
             newTrack.getExtent().ifPresent(mapView::setExtent);
             logger.debug("{}", newTrack.getStatistics().toString());
+        }
+        updateElevationChartWithTrack(newTrack);
+    }
+
+    /**
+     * updates the elevation chart with the data from the given track.
+     *
+     * @param track
+     *         the track containing the new data
+     */
+    private void updateElevationChartWithTrack(Track track) {
+        // clear the old data from the chart
+        elevationChart.getData().clear();
+
+        if (null != track) {
+            XYChart.Series<Number, Number> series = new XYChart.Series<>();
+            series.setName("distance (meters)");
+            elevationChart.getData().add(series);
+            ObservableList<XYChart.Data<Number, Number>> dataList = series.getData();
+            for (TrackPoint trackPoint : track.getTrackPoints()) {
+                dataList.add(new XYChart.Data<>(trackPoint.getDistance(), trackPoint.getElevation()));
+            }
         }
     }
 

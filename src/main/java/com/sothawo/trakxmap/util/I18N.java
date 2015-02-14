@@ -48,7 +48,6 @@ public class I18N {
     public static final String LABEL_TITLE_TRACKLIST = "label.title.tracklist";
     public static final String LABEL_DROP_TRACKFILE_HERE = "label.drop.trackfile.here";
     public static final String LABEL_FILECHOOSER_TRACKS = "label.filechooser.tracks";
-    public static final String LABEL_DUMMY_ELEVATION = "label.dummy.elevation";
     public static final String LOG_START_PROGRAM = "log.start.program";
     public static final String LOG_START_PROGRAM_FINISHED = "log.start.program.finished";
     public static final String LOG_SWITCH_LOCALE = "log.switch.locale";
