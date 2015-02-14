@@ -15,6 +15,8 @@
 */
 package com.sothawo.trakxmap.util;
 
+import com.sothawo.trakxmap.db.TrackPoint;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -79,6 +81,19 @@ public class TrackStatistics {
     }
 
     /**
+     * adds a trackpoint that constiains several aspects of information.
+     *
+     * @param trackPoint
+     *         the trackpoint to add
+     */
+    public void addTrackPoint(TrackPoint trackPoint) {
+        if (null != trackPoint) {
+            addTrackTime(trackPoint.getTimestamp());
+            adddTrackpointDistance(trackPoint.getDistance());
+        }
+    }
+
+    /**
      * if this is the first trackpoint, the timestamp is kept as starttime. If it is after the start time, it is kept
      * as
      * end time.
@@ -86,7 +101,7 @@ public class TrackStatistics {
      * @param localDateTime
      *         time to check
      */
-    public void addTrackTime(LocalDateTime localDateTime) {
+    private void addTrackTime(LocalDateTime localDateTime) {
         if (null != localDateTime) {
             if (null == trackStartTime) {
                 trackStartTime = localDateTime;
@@ -94,6 +109,19 @@ public class TrackStatistics {
             if (null == trackEndTime || localDateTime.isAfter(trackEndTime)) {
                 trackEndTime = localDateTime;
             }
+        }
+    }
+
+    /**
+     * adds a given distance to the track's distance.
+     *
+     * @param distance
+     *         the distance to add
+     */
+    private void adddTrackpointDistance(Double distance) {
+        if (null != distance) {
+            // distance is accumulated from track start
+            trackDistance = distance;
         }
     }
 
@@ -106,19 +134,6 @@ public class TrackStatistics {
     public void addWaypointTime(LocalDateTime localDateTime) {
         if (null != localDateTime && null == firstWaypointTime) {
             firstWaypointTime = localDateTime;
-        }
-    }
-
-    /**
-     * adds a given distance to the track's distance.
-     *
-     * @param distance
-     *         the distance to add
-     */
-    public void adddTrackpointDistance(Double distance) {
-        if (null != distance) {
-            // distance is accumulated from track start
-            trackDistance = distance;
         }
     }
 

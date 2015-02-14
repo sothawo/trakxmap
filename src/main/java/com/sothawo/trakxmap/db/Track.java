@@ -128,10 +128,7 @@ public class Track implements Serializable {
     public TrackStatistics getStatistics() {
         if (null == statistics) {
             statistics = new TrackStatistics();
-            trackPoints.stream().forEach(tp -> {
-                statistics.addTrackTime(tp.getTimestamp());
-                statistics.adddTrackpointDistance(tp.getDistance());
-            });
+            trackPoints.stream().forEach(statistics::addTrackPoint);
             routePoints.stream().map(Point::getTimestamp).forEach(statistics::addRouteTime);
             wayPoints.stream().map(Point::getTimestamp).forEach(statistics::addWaypointTime);
         }
