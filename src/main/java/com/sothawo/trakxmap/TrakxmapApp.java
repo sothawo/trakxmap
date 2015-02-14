@@ -573,6 +573,7 @@ public class TrakxmapApp extends Application {
             routeLine.setVisible(true);
 
             newTrack.getExtent().ifPresent(mapView::setExtent);
+            logger.debug("{}", newTrack.getStatistics().toString());
         }
     }
 

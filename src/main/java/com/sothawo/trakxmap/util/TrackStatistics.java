@@ -39,6 +39,10 @@ public class TrackStatistics {
     private LocalDateTime firstWaypointTime;
     /** the track's distance */
     private Double trackDistance;
+    /** minimum elevation */
+    private Double minElevation;
+    /** maximum elevation */
+    private Double maxElevation;
 
 // ------------------------ CANONICAL METHODS ------------------------
 
@@ -50,6 +54,9 @@ public class TrackStatistics {
                 ", routeStartTime=" + routeStartTime +
                 ", firstWaypointTime=" + firstWaypointTime +
                 (duration.isPresent() ? (", duration=" + duration.toString()) : "") +
+                ", distance=" + trackDistance +
+                ", minElevation=" + minElevation +
+                ", maxElevation=" + maxElevation +
                 '}';
     }
 
@@ -90,6 +97,30 @@ public class TrackStatistics {
         if (null != trackPoint) {
             addTrackTime(trackPoint.getTimestamp());
             adddTrackpointDistance(trackPoint.getDistance());
+            addMinElevation(trackPoint.getElevation());
+            addMaxElevation(trackPoint.getElevation());
+        }
+    }
+
+    /**
+     * adjust the minimum elevation, 0.0 is not used, this denotes an emtpy entry
+     *
+     * @param elevation
+     */
+    private void addMaxElevation(Double elevation) {
+        if (null != elevation && !Double.valueOf(0.0).equals(elevation)) {
+            maxElevation = (null == maxElevation) ? elevation : Math.max(maxElevation, elevation);
+        }
+    }
+
+    /**
+     * adjust the minimum elevation, 0.0 is not used, this denotes an emtpy entry
+     *
+     * @param elevation
+     */
+    private void addMinElevation(Double elevation) {
+        if (null != elevation && !Double.valueOf(0.0).equals(elevation)) {
+            minElevation = (null == minElevation) ? elevation : Math.min(minElevation, elevation);
         }
     }
 
