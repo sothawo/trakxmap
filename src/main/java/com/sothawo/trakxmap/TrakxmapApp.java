@@ -21,15 +21,11 @@ import com.sothawo.mapjfx.MapType;
 import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.db.DB;
-import com.sothawo.trakxmap.db.DatabaseUpdate;
 import com.sothawo.trakxmap.db.Track;
 import com.sothawo.trakxmap.db.TrackPoint;
 import com.sothawo.trakxmap.loader.TrackLoader;
 import com.sothawo.trakxmap.loader.TrackLoaderGPX;
-import com.sothawo.trakxmap.util.Failure;
-import com.sothawo.trakxmap.util.Geo;
-import com.sothawo.trakxmap.util.I18N;
-import com.sothawo.trakxmap.util.PreferencesBindings;
+import com.sothawo.trakxmap.util.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import javafx.application.Application;
@@ -52,19 +48,23 @@ import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import liquibase.Contexts;
+import liquibase.Liquibase;
+import liquibase.database.DatabaseConnection;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.LiquibaseException;
+import liquibase.resource.ClassLoaderResourceAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -169,35 +169,25 @@ public class TrakxmapApp extends Application {
         if (null == files || 0 == files.size()) {
             return;
         }
-        files.forEach(file -> {
-
-            Supplier<Optional<Track>> optionalTrackSuplier = () -> {
-                logger.info(I18N.get(I18N.LOG_LOADING_TRACK, file.toString()));
-                Optional<Track> track = Optional.empty();
-                Iterator<TrackLoader> trackLoaderIterator = trackLoaders.iterator();
-                while (!track.isPresent() && trackLoaderIterator.hasNext()) {
-                    track = trackLoaderIterator.next().load(file);
-                }
-                if (!track.isPresent()) {
-                    logger.warn(I18N.get(I18N.ERROR_NO_TRACKLOADER_FOR_FILE, file.toString()));
-                }
-                return track;
-            };
-
-            Function<Optional<Track>, Void> optionalTrackProcessor = optionalTrack -> {
-                optionalTrack.ifPresent(track -> {
-                    Geo.updateTrackDistances(track);
-                    // store in db and trackList
-                    db.ifPresent(d -> d.store(track));
-                    Platform.runLater(() -> {
-                        trackList.add(track);
-                        sortTrackList();
-                    });
+        files.parallelStream().forEach(file -> {
+            logger.info(I18N.get(I18N.LOG_LOADING_TRACK, file.toString()));
+            Optional<Track> optionalTrack = Optional.empty();
+            Iterator<TrackLoader> trackLoaderIterator = trackLoaders.iterator();
+            while (!optionalTrack.isPresent() && trackLoaderIterator.hasNext()) {
+                optionalTrack = trackLoaderIterator.next().load(file);
+            }
+            if (optionalTrack.isPresent()) {
+                Track track = optionalTrack.get();
+                Geo.updateTrackDistances(track);
+                // store in db and trackList
+                db.ifPresent(d -> d.store(track));
+                Platform.runLater(() -> {
+                    trackList.add(track);
+                    sortTrackList();
                 });
-                return null;
-            };
-
-            CompletableFuture.supplyAsync(optionalTrackSuplier).thenApplyAsync(optionalTrackProcessor);
+            } else {
+                logger.warn(I18N.get(I18N.ERROR_NO_TRACKLOADER_FOR_FILE, file.toString()));
+            }
         });
     }
 
@@ -224,17 +214,36 @@ public class TrakxmapApp extends Application {
      */
     private void initializeDatabase() {
         // create an update task
-        DatabaseUpdate dbUpdate = new DatabaseUpdate();
+        Supplier<Optional<Failure>> dbUpdate = () -> {
+            logger.info(I18N.get(I18N.LOG_DB_UPDATE_NECESSARY));
+            try {
+                DatabaseConnection dbConnection =
+                        new JdbcConnection(DriverManager.getConnection(PathTools.getJdbcUrl()));
+                Liquibase liquibase =
+                        new Liquibase("db/db-changelog.xml", new ClassLoaderResourceAccessor(), dbConnection);
+                liquibase.update(new Contexts());
+                return Optional.empty();
+            } catch (SQLException | LiquibaseException e) {
+                logger.error(I18N.get(I18N.LOG_DB_UPDATE_ERROR), e);
+                return Optional.of(new Failure(I18N.get(I18N.LOG_DB_UPDATE_ERROR), e));
+            }
+        };
+
         CompletableFuture.supplyAsync(dbUpdate).thenAcceptAsync(failure -> {
             dbUpdateFinished.set(true);
             logger.info(I18N.get(I18N.LOG_DB_INIT_FINISHED));
             if (!failure.isPresent()) {
                 db = Optional.of(new DB());
-                db.get().loadTrackIds().stream().forEach(id -> CompletableFuture.runAsync(
-                        () -> db.get().loadTrackWithId(id).ifPresent(t -> Platform.runLater(() -> {
-                            trackList.add(t);
-                            sortTrackList();
-                        }))));
+                db.get()
+                        .loadTrackIds()
+                        .parallelStream()
+                        .forEach(id -> db.get()
+                                .loadTrackWithId(id)
+                                .ifPresent(
+                                        t -> Platform.runLater(() -> {
+                                            trackList.add(t);
+                                            sortTrackList();
+                                        })));
             }
         });
     }
