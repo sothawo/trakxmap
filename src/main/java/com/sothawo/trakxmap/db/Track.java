@@ -23,8 +23,6 @@ import com.sothawo.trakxmap.util.PathTools;
 import com.sothawo.trakxmap.util.TrackStatistics;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.paint.Color;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -43,13 +41,12 @@ import java.util.stream.Collectors;
 public class Track implements Serializable {
 // ------------------------------ FIELDS ------------------------------
 
+    /** the name of the track */
+    private final SimpleStringProperty name = new SimpleStringProperty(I18N.get(I18N.TRACK_NAME_DEFAULT));
     /** db id of the track */
     private Long id;
     /** the filename where the track was loaded from (without path) */
     private String filename;
-
-    /** the name of the track */
-    private final SimpleStringProperty name = new SimpleStringProperty(I18N.get(I18N.TRACK_NAME_DEFAULT));
     /** the waypoints of the track */
     private List<WayPoint> wayPoints = new ArrayList<>();
     /** the routepoints of the track */
@@ -133,11 +130,6 @@ public class Track implements Serializable {
             wayPoints.stream().map(Point::getTimestamp).forEach(statistics::addWaypointTime);
         }
         return statistics;
-    }
-
-    @Column(name = "NAME", length = 255)
-    public String getName() {
-        return name.get();
     }
 
     /**
@@ -224,6 +216,11 @@ public class Track implements Serializable {
         wayPoint.setTrack(this);
         wayPoint.setSequence(wayPoints.size() + 1);
         wayPoints.add(wayPoint);
+    }
+
+    @Column(name = "NAME", length = 255)
+    public String getName() {
+        return name.get();
     }
 
     public SimpleStringProperty nameProperty() {

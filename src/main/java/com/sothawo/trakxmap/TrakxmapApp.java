@@ -21,7 +21,7 @@ import com.sothawo.mapjfx.MapType;
 import com.sothawo.mapjfx.MapView;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.db.DB;
-import com.sothawo.trakxmap.db.DatabaseUpdateTask;
+import com.sothawo.trakxmap.db.DatabaseUpdate;
 import com.sothawo.trakxmap.db.Track;
 import com.sothawo.trakxmap.db.TrackPoint;
 import com.sothawo.trakxmap.loader.TrackLoader;
@@ -38,8 +38,6 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
-import javafx.concurrent.Worker;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -61,10 +59,13 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -90,21 +91,14 @@ public class TrakxmapApp extends Application {
 
     /** user preferences */
     private final PreferencesBindings prefs = PreferencesBindings.forPackage(TrakxmapApp.class);
-
-    /** reference to the primary Stage */
-    private Stage primaryStage;
-
-    /** the mapView to be used */
-    private MapView mapView;
-
     /** the list containing the Tracks */
     private final ObservableList<Track> trackList = FXCollections.observableArrayList();
-
     /** List with the available TrackLoaders in the order thy are used to load a file */
     private final List<TrackLoader> trackLoaders = new ArrayList<>();
-
-    /** threadpool for work to be done in the background */
-    private ExecutorService threadPool;
+    /** reference to the primary Stage */
+    private Stage primaryStage;
+    /** the mapView to be used */
+    private MapView mapView;
 
     /** Flag wether the database update is finished */
     private AtomicBoolean dbUpdateFinished = new AtomicBoolean(false);
@@ -126,21 +120,16 @@ public class TrakxmapApp extends Application {
 
 // -------------------------- OTHER METHODS --------------------------
 
+    public static void main(String[] args) {
+        launch(args);
+    }
+
     @Override
     public void init() throws Exception {
         super.init();
         initLanguage();
         trackLoaders.add(new TrackLoaderGPX());
 //        trackLoaders.add(new TrackLoaderFail());
-
-        // create a thread pool for background tasks with a custom thread factory
-        final AtomicInteger threadId = new AtomicInteger(1);
-        threadPool = Executors.newCachedThreadPool(runnable -> {
-            Thread thread = new Thread(runnable);
-            thread.setName("trakxmap-threadpool-" + threadId.getAndIncrement());
-            thread.setDaemon(true);
-            return thread;
-        });
     }
 
     /**
@@ -170,7 +159,8 @@ public class TrakxmapApp extends Application {
     }
 
     /**
-     * tries to load the given track files.
+     * Tries to load the given track files. First the track file is loaded, then the distances in the track are
+     * calculated. After that step, the data is persisted in the database and added to the trackList.
      *
      * @param files
      *         file names
@@ -179,38 +169,35 @@ public class TrakxmapApp extends Application {
         if (null == files || 0 == files.size()) {
             return;
         }
-        files.forEach((file) -> {
-            //create a task that contains the loaded track if successful
-            Task<Optional<Track>> task = new Task<Optional<Track>>() {
-                @Override
-                protected Optional<Track> call() throws Exception {
-                    logger.info(I18N.get(I18N.LOG_LOADING_TRACK, file.toString()));
-                    Optional<Track> track = Optional.empty();
-                    Iterator<TrackLoader> trackLoaderIterator = trackLoaders.iterator();
-                    while (!track.isPresent() && trackLoaderIterator.hasNext()) {
-                        track = trackLoaderIterator.next().load(file);
-                    }
-                    if (!track.isPresent()) {
-                        logger.warn(I18N.get(I18N.ERROR_NO_TRACKLOADER_FOR_FILE, file.toString()));
-                    }
-                    return track;
+        files.forEach(file -> {
+
+            Supplier<Optional<Track>> optionalTrackSuplier = () -> {
+                logger.info(I18N.get(I18N.LOG_LOADING_TRACK, file.toString()));
+                Optional<Track> track = Optional.empty();
+                Iterator<TrackLoader> trackLoaderIterator = trackLoaders.iterator();
+                while (!track.isPresent() && trackLoaderIterator.hasNext()) {
+                    track = trackLoaderIterator.next().load(file);
                 }
+                if (!track.isPresent()) {
+                    logger.warn(I18N.get(I18N.ERROR_NO_TRACKLOADER_FOR_FILE, file.toString()));
+                }
+                return track;
             };
-            // wait for the task to send back the value by observing the valueProperty
-            task.valueProperty().addListener((observable, oldValue, newValue) -> {
-                if (null != newValue) {
-                    if (newValue.isPresent()) {
-                        Track track = newValue.get();
-                        Geo.updateTrackDistances(track);
-                        // store in db and trackList
-                        db.ifPresent(d -> d.store(track));
+
+            Function<Optional<Track>, Void> optionalTrackProcessor = optionalTrack -> {
+                optionalTrack.ifPresent(track -> {
+                    Geo.updateTrackDistances(track);
+                    // store in db and trackList
+                    db.ifPresent(d -> d.store(track));
+                    Platform.runLater(() -> {
                         trackList.add(track);
                         sortTrackList();
-                    }
-                }
-            });
-            //Send the task to the threadpool
-            threadPool.submit(task);
+                    });
+                });
+                return null;
+            };
+
+            CompletableFuture.supplyAsync(optionalTrackSuplier).thenApplyAsync(optionalTrackProcessor);
         });
     }
 
@@ -237,47 +224,19 @@ public class TrakxmapApp extends Application {
      */
     private void initializeDatabase() {
         // create an update task
-        DatabaseUpdateTask dbUpdateTask = new DatabaseUpdateTask();
-        // watch for SUCCEED
-        dbUpdateTask.stateProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.equals(Worker.State.SUCCEEDED)) {
-                Optional<Failure> failure = dbUpdateTask.getValue();
-                // no failure, create DB connector and fire off track selection
-                if (!failure.isPresent()) {
-                    db = Optional.of(new DB());
-                    // fire off a task to load the track ids from the db and that in turn starts tasks to load the
-                    // tracks
-                    threadPool.submit(new Task<Void>() {
-                        @Override
-                        protected Void call() throws Exception {
-                            // for every Id fire off a Task to load the track
-                            db.get().loadTrackIds().stream().forEach(id -> threadPool.submit(new Task<Void>() {
-                                @Override
-                                protected Void call() throws Exception {
-                                    db.get().loadTrackWithId(id).ifPresent(t -> Platform.runLater(() -> {
-                                                trackList.add(t);
-                                                sortTrackList();
-                                            })
-                                    );
-                                    return null;
-                                }
-                            }));
-                            return null;
-                        }
-                    });
-                }
-                dbUpdateFinished.set(true);
-            } else if (newValue.equals(Worker.State.FAILED)) {
-                // something bad happened that was not expected by the updater
-                logger.error(I18N.get(I18N.LOG_DB_UPDATE_ERROR), dbUpdateTask.getException());
-                dbUpdateFinished.set(true);
-            }
-            if (dbUpdateFinished.get()) {
-                logger.info(I18N.get(I18N.LOG_DB_INIT_FINISHED));
+        DatabaseUpdate dbUpdate = new DatabaseUpdate();
+        CompletableFuture.supplyAsync(dbUpdate).thenAcceptAsync(failure -> {
+            dbUpdateFinished.set(true);
+            logger.info(I18N.get(I18N.LOG_DB_INIT_FINISHED));
+            if (!failure.isPresent()) {
+                db = Optional.of(new DB());
+                db.get().loadTrackIds().stream().forEach(id -> CompletableFuture.runAsync(
+                        () -> db.get().loadTrackWithId(id).ifPresent(t -> Platform.runLater(() -> {
+                            trackList.add(t);
+                            sortTrackList();
+                        }))));
             }
         });
-        // send update task to the thread pool
-        threadPool.submit(dbUpdateTask);
     }
 
     /**
@@ -398,8 +357,7 @@ public class TrakxmapApp extends Application {
     }
 
     /**
-     * sets up and initializes the map view. the MapView object is stored in a field as it is needed in different
-     * places
+     * sets up and initializes the map view. the MapView object is stored in a field as it is needed in different places
      * of the application.
      */
     private void createMapView() {
@@ -626,16 +584,12 @@ public class TrakxmapApp extends Application {
         }
     }
 
+// --------------------------- main() method ---------------------------
+
     @Override
     public void stop() throws Exception {
         super.stop();
         db.ifPresent(DB::close);
         logger.info(I18N.get(I18N.LOG_STOP_PROGRAM));
-    }
-
-// --------------------------- main() method ---------------------------
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

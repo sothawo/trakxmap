@@ -18,7 +18,6 @@ package com.sothawo.trakxmap.db;
 import com.sothawo.trakxmap.util.Failure;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PathTools;
-import javafx.concurrent.Task;
 import liquibase.Contexts;
 import liquibase.Liquibase;
 import liquibase.database.DatabaseConnection;
@@ -31,18 +30,19 @@ import org.slf4j.LoggerFactory;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Task for updating the database.
  *
  * @author P.J.Meisch (pj.meisch@jaroso.de)
  */
-public class DatabaseUpdateTask  extends Task<Optional<Failure>> {
+public class DatabaseUpdate implements Supplier<Optional<Failure>> {
     /** Logger */
-    private final static Logger logger = LoggerFactory.getLogger(DatabaseUpdateTask.class);
+    private final static Logger logger = LoggerFactory.getLogger(DatabaseUpdate.class);
 
     @Override
-    protected Optional<Failure> call() throws Exception {
+    public Optional<Failure> get() {
         logger.info(I18N.get(I18N.LOG_DB_UPDATE_NECESSARY));
         try {
             DatabaseConnection dbConnection = new JdbcConnection(DriverManager.getConnection(PathTools.getJdbcUrl()));

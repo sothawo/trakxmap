@@ -77,7 +77,7 @@ public class DB implements AutoCloseable {
 // --------------------------- CONSTRUCTORS ---------------------------
 
     /**
-     * creates a EntityManagerFactory for the persitence unit #PERSISTENCE_UNIT_NAME
+     * initializes the object. creates a EntityManagerFactory for the persitence unit #PERSISTENCE_UNIT_NAME
      */
     public DB() {
         Map<String, String> props = new HashMap<>();
