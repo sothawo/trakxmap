@@ -67,6 +67,7 @@ public class I18N {
     public static final String LOG_STOP_PROGRAM = "log.stop.program";
     public static final String LABEL_TRACKLISTCELL_DURATIONLENGTH = "label.tracklistcell.durationLength";
     public static final String LOG_DELETE_TRACK = "log.delete.track";
+    public static final String ASK_DELETE_TRACK = "ask.delete.track";
 
     public static final String CONTEXT_MENU_DELETE_TRACK = "context.menu.delete.track";
     private static final Logger logger = LoggerFactory.getLogger(I18N.class);
@@ -76,8 +77,12 @@ public class I18N {
 
     static {
         locale = new SimpleObjectProperty<>(getDefaultLocale());
-        locale.addListener((observable, oldValue, newValue) -> logger.info(get(LOG_SWITCH_LOCALE, oldValue,
-                newValue)));
+        locale.addListener((observable, oldValue, newValue) ->
+        {
+            logger.info(get(LOG_SWITCH_LOCALE, oldValue,
+                    newValue));
+            Locale.setDefault(newValue);
+        });
     }
 
     public static ObjectProperty<Locale> localeProperty() {
@@ -161,7 +166,7 @@ public class I18N {
 
     /**
      * gets the string with the given key from the resource bundle for the current locale and uses it as first argument
-     * to MessageFormat.foramt, passing in the optional args and returning the result.
+     * to MessageFormat.format, passing in the optional args and returning the result.
      *
      * @param key
      *         message key

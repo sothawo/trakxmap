@@ -1,4 +1,4 @@
-<configuration>
+<configuration debug="true">
     <!-- context listener needed for redirection of JUL to slf4j to prevent performance problems -->
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />
 
@@ -6,7 +6,7 @@
         <!-- encoders are assigned the type
              ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %logger{36} - %msg%n</pattern>
+            <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} %highlight(%-5level) [%thread] %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 

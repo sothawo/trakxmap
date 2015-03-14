@@ -84,6 +84,8 @@ public class TrakxmapApp extends Application {
     private static final String PREF_LANGUAGE = "language";
     private static final String PREF_MAPTYPE = "maptype";
     private static final String CONF_WINDOW_TITLE = "windowTitle";
+    private static final String JAVA_UTIL_CONCURRENT_FORK_JOIN_POOL_COMMON_PARALLELISM =
+            "java.util.concurrent.ForkJoinPool.common.parallelism";
 
 
     /** application configuration */
@@ -533,13 +535,15 @@ public class TrakxmapApp extends Application {
      *         the track to delete
      */
     private void deleteTrack(Track track) {
-        // TODO: confirm deletion
-        logger.info(I18N.get(I18N.LOG_DELETE_TRACK, track));
-        db.ifPresent(d -> {
-            Optional<Failure> optFailure = d.deleteTrack(track);
-            if (!optFailure.isPresent()) {
-                trackList.remove(track);
-            }
+        new Alert(Alert.AlertType.CONFIRMATION, I18N.get(I18N.ASK_DELETE_TRACK, track.getName())).showAndWait()
+                .filter(response -> response == ButtonType.OK).ifPresent(response -> {
+            logger.info(I18N.get(I18N.LOG_DELETE_TRACK, track));
+            db.ifPresent(d -> {
+                Optional<Failure> optFailure = d.deleteTrack(track);
+                if (!optFailure.isPresent()) {
+                    trackList.remove(track);
+                }
+            });
         });
     }
 

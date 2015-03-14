@@ -38,6 +38,10 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ## version history
 
+### 0.4.1
+
+* uses JDK >= 1.8u40, Dialogs
+
 ### 0.4.0
 
 * track elevation data is displayed below the map
