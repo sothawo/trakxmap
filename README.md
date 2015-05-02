@@ -38,6 +38,10 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ## version history
 
+### 0.4.2-SNAPSHOT
+
+* update to mapjfx version 1.4.4
+
 ### 0.4.1
 
 * uses JDK >= 1.8u40, Dialogs
