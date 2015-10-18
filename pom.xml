@@ -45,7 +45,7 @@
         <dependency>
             <groupId>com.sothawo</groupId>
             <artifactId>mapjfx</artifactId>
-            <version>1.4.7</version>
+            <version>1.4.8</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
