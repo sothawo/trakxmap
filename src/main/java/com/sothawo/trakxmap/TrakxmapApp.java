@@ -86,6 +86,7 @@ public class TrakxmapApp extends Application {
     private static final String CONF_WINDOW_TITLE = "windowTitle";
     private static final String JAVA_UTIL_CONCURRENT_FORK_JOIN_POOL_COMMON_PARALLELISM =
             "java.util.concurrent.ForkJoinPool.common.parallelism";
+    private static final String CONFIG_BING_MAPS_API_KEY = "bingMaps.apiKey";
 
 
     /** application configuration */
@@ -373,6 +374,7 @@ public class TrakxmapApp extends Application {
      */
     private void createMapView() {
         mapView = new MapView();
+        mapView.setBingMapsApiKey(config.getString(CONFIG_BING_MAPS_API_KEY));
         mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 logger.trace(I18N.get(I18N.LOG_MAP_INITIALIZED));
