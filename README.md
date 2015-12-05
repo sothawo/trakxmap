@@ -40,7 +40,8 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ### 0.4.2-SNAPSHOT
 
-* update to mapjfx version 1.4.4
+* support for bing maps
+* update to mapjfx version 1.5.0
 
 ### 0.4.1
 
