@@ -573,7 +573,8 @@ public class TrakxmapApp extends Application {
             routeLine.setVisible(true);
 
             newTrack.getExtent().ifPresent(mapView::setExtent);
-            logger.debug("{}", newTrack.getStatistics().toString());
+            logger.debug("changed to {}", newTrack.toString());
+            logger.debug("with {}", newTrack.getStatistics().toString());
         }
         updateElevationChartWithTrack(newTrack);
     }

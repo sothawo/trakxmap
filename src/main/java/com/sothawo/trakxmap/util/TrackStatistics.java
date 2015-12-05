@@ -53,7 +53,7 @@ public class TrackStatistics {
                 "trackStartTime=" + trackStartTime +
                 ", routeStartTime=" + routeStartTime +
                 ", firstWaypointTime=" + firstWaypointTime +
-                (duration.isPresent() ? (", duration=" + duration.toString()) : "") +
+                duration.map(Duration::toString).orElse("") +
                 ", distance=" + trackDistance +
                 ", minElevation=" + minElevation +
                 ", maxElevation=" + maxElevation +
