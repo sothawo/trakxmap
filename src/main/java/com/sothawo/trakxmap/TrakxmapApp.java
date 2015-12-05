@@ -19,6 +19,7 @@ import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.MapType;
 import com.sothawo.mapjfx.MapView;
+import com.sothawo.mapjfx.Marker;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.db.DB;
 import com.sothawo.trakxmap.db.Track;
@@ -562,7 +563,10 @@ public class TrakxmapApp extends Application {
         if (null != oldTrack) {
             mapView.removeCoordinateLine(oldTrack.getTrackLine());
             mapView.removeCoordinateLine(oldTrack.getRouteLine());
+
+            oldTrack.wayPointMarkers().forEach(wpm -> mapView.removeMarker(wpm));
         }
+
         if (null != newTrack) {
             CoordinateLine trackLine = newTrack.getTrackLine();
             mapView.addCoordinateLine(trackLine);
@@ -571,6 +575,8 @@ public class TrakxmapApp extends Application {
             CoordinateLine routeLine = newTrack.getRouteLine();
             mapView.addCoordinateLine(routeLine);
             routeLine.setVisible(true);
+
+            newTrack.wayPointMarkers().forEach(wpm -> mapView.addMarker(wpm));
 
             newTrack.getExtent().ifPresent(mapView::setExtent);
             logger.debug("changed to {}", newTrack.toString());

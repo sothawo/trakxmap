@@ -38,8 +38,13 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ## version history
 
-### 0.4.2-SNAPSHOT
+### 0.5.1-SNAPSHOT
 
+* current development version
+
+### 0.5.0
+
+* display of waypoint as map markers
 * support for bing maps
 * update to mapjfx version 1.5.0
 

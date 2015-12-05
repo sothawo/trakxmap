@@ -18,18 +18,31 @@ package com.sothawo.trakxmap.db;
 import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.Extent;
+import com.sothawo.mapjfx.Marker;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PathTools;
 import com.sothawo.trakxmap.util.TrackStatistics;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.paint.Color;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A track that can be displayed on the map with additional data.
@@ -53,16 +66,18 @@ public class Track implements Serializable {
     private List<RoutePoint> routePoints = new ArrayList<>();
     /** the trackpoints of the track */
     private List<TrackPoint> trackPoints = new ArrayList<>();
+    /** the time info for the track */
+    private TrackStatistics statistics = null;
 
+    // mapjfx elements
     /** the extent of the track */
     private Extent extent = null;
     /** CoordinateLine for the trackpoints */
     private CoordinateLine trackLine = null;
     /** CoordinateLine for the routepoints */
     private CoordinateLine routeLine = null;
-
-    /** the time info for the track */
-    private TrackStatistics statistics = null;
+    /** Markers for the waypoints. */
+    private Collection<Marker> wayPointMarkers = null;
 
 // --------------------------- CONSTRUCTORS ---------------------------
 
@@ -165,6 +180,29 @@ public class Track implements Serializable {
 
     private void setWayPoints(List<WayPoint> wayPoints) {
         this.wayPoints = wayPoints;
+    }
+
+    @Transient
+    public Collection<Marker> getWayPointMarkers() {
+        if (null == wayPointMarkers) {
+            wayPointMarkers = new ArrayList<>();
+            wayPoints.stream().forEach(wp -> {
+                final Marker marker = Marker.createProvided(Marker.Provided.RED);
+                marker.setPosition(wp.getCoordinate());
+                marker.setVisible(true);
+                wayPointMarkers.add(marker);
+            });
+        }
+        return wayPointMarkers;
+    }
+
+    /**
+     * WayPoint Markers as Stream.
+     *
+     * @return stream of waypoint markers
+     */
+    public Stream<Marker> wayPointMarkers() {
+        return getWayPointMarkers().stream();
     }
 
 // ------------------------ CANONICAL METHODS ------------------------
