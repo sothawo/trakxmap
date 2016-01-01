@@ -38,9 +38,13 @@ _mvn package && (cd target/trakxmap && ./bin/trakxmap)_
 
 ## version history
 
-### 0.5.1-SNAPSHOT
+### 0.6.1-SNAPSHOT
 
 * current development version
+
+### 0.6.0
+
+* display of waypoint names as labels
 
 ### 0.5.0
 
