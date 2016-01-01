@@ -375,6 +375,7 @@ public class TrakxmapApp extends Application {
      */
     private void createMapView() {
         mapView = new MapView();
+        mapView.setCustomMapviewCssURL(getClass().getResource("/custom_mapview.css"));
         mapView.setBingMapsApiKey(config.getString(CONFIG_BING_MAPS_API_KEY));
         mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {

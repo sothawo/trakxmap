@@ -18,6 +18,7 @@ package com.sothawo.trakxmap.db;
 import com.sothawo.mapjfx.Coordinate;
 import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.Extent;
+import com.sothawo.mapjfx.MapLabel;
 import com.sothawo.mapjfx.Marker;
 import com.sothawo.trakxmap.util.I18N;
 import com.sothawo.trakxmap.util.PathTools;
@@ -189,6 +190,8 @@ public class Track implements Serializable {
             wayPoints.stream().forEach(wp -> {
                 final Marker marker = Marker.createProvided(Marker.Provided.RED);
                 marker.setPosition(wp.getCoordinate());
+                Optional.ofNullable(wp.getName())
+                        .ifPresent(name -> marker.attachLabel(new MapLabel(name, 10, -10).setCssClass("red-label")));
                 marker.setVisible(true);
                 wayPointMarkers.add(marker);
             });
