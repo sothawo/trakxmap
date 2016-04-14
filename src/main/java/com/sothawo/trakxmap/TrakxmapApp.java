@@ -20,6 +20,7 @@ import com.sothawo.mapjfx.CoordinateLine;
 import com.sothawo.mapjfx.MapType;
 import com.sothawo.mapjfx.MapView;
 import com.sothawo.mapjfx.Marker;
+import com.sothawo.mapjfx.offline.OfflineCache;
 import com.sothawo.trakxmap.control.TrackListCell;
 import com.sothawo.trakxmap.db.DB;
 import com.sothawo.trakxmap.db.Track;
@@ -60,6 +61,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -386,6 +390,18 @@ public class TrakxmapApp extends Application {
                 mapView.setZoom(5);
             }
         });
+
+        // init MapView-Cache
+        final OfflineCache offlineCache = mapView.getOfflineCache();
+        final String cacheDir = System.getProperty("java.io.tmpdir") + "/trakxmap/mapjfx-cache";
+        logger.info("using dir for cache: " + cacheDir);
+        try {
+            Files.createDirectories(Paths.get(cacheDir));
+            offlineCache.setCacheDirectory(cacheDir);
+            offlineCache.setActive(true);
+        } catch (IOException e) {
+            logger.warn("could not activate offline cache", e);
+        }
         mapView.initialize();
     }
 

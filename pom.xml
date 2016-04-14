@@ -4,7 +4,7 @@
 
     <groupId>com.sothawo</groupId>
     <artifactId>trakxmap</artifactId>
-    <version>0.6.0</version>
+    <version>0.7.0</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -45,7 +45,7 @@
         <dependency>
             <groupId>com.sothawo</groupId>
             <artifactId>mapjfx</artifactId>
-            <version>1.6.0</version>
+            <version>1.7.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -204,13 +204,12 @@
             <plugin>
                 <groupId>com.zenjava</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
-                <version>8.1.2</version>
+                <version>8.4.0</version>
                 <configuration>
                     <mainClass>com.sothawo.trakxmap.TrakxmapApp</mainClass>
                     <vendor>sothawo.com</vendor>
                     <identifier>com.sothawo.trakxmap</identifier>
                     <nativeReleaseVersion>${project.version}</nativeReleaseVersion>
-                    <preLoader>com.sothawo.trakxmap.TrakxmapPreloader</preLoader>
                 </configuration>
             </plugin>
         </plugins>
