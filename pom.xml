@@ -4,7 +4,7 @@
 
     <groupId>com.sothawo</groupId>
     <artifactId>trakxmap</artifactId>
-    <version>0.7.1-SNAPSHOT</version>
+    <version>0.7.0</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -45,7 +45,7 @@
         <dependency>
             <groupId>com.sothawo</groupId>
             <artifactId>mapjfx</artifactId>
-            <version>1.7.3-SNAPSHOT</version>
+            <version>1.32.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
